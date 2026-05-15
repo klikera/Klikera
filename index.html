@@ -1,0 +1,939 @@
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KlikEra — Contekan Chat Anti-PHP</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B141A;--surf:#111B21;--card:#202C33;--border:#2A3942;--text:#E9EDEF;--muted:#8696A0;--sky:#53BDEB;--wa-in:#202C33;--wa-out:#005C4B;--lime:#A8FF3E;--red:#F15C6D;--warn:#FBBF24;--purple:#A855F7;--danger:#3A1C20;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Outfit',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;}
+.fade-in{animation:fadeIn 0.3s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.hidden{display:none !important;}
+
+/* ── HEADER SMOOTH (anti kejang) ── */
+.app-header {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--bg);
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  transition: all .25s ease;
+}
+.scrolled { padding: 6px 16px 6px !important; border-bottom-color: var(--sky); }
+
+.h-logo { font-size:24px; font-weight:800; color:#fff; line-height:1; transition: font-size .25s ease; }
+.scrolled .h-logo { font-size:18px; }
+
+.h-tagline {
+  font-size:10px; color:var(--muted); font-weight:600;
+  max-height:20px; opacity:1; overflow:hidden;
+  transition: max-height .25s ease, opacity .2s ease, margin .25s ease;
+  margin-top:1px;
+}
+.scrolled .h-tagline { max-height:0; opacity:0; margin-top:0; }
+
+.h-logo-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px;
+  transition: margin .25s ease;
+}
+.scrolled .h-logo-row { margin-bottom:4px; }
+/* Sembunyikan nama toko saat scroll — hemat ruang */
+.scrolled .h-logo-row > div:last-child { display:none; }
+
+.h-rescue-label {
+  font-size:10px; font-weight:800; color:var(--muted);
+  max-height:18px; opacity:1; overflow:hidden;
+  transition: max-height .25s ease, opacity .2s ease, margin .25s ease;
+  margin-bottom:6px;
+}
+.scrolled .h-rescue-label { max-height:0; opacity:0; margin-bottom:0; }
+
+/* Panic buttons HILANG saat scroll — search lebih lega */
+.rescue-wrap {
+  display:flex; gap:6px; overflow-x:auto;
+  padding-bottom:8px; margin-bottom:6px;
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  max-height:50px; opacity:1;
+  transition: max-height .25s ease, opacity .2s ease, padding .25s ease, margin .25s ease;
+}
+.rescue-wrap::-webkit-scrollbar { display:none; }
+.scrolled .rescue-wrap { max-height:0; opacity:0; padding-bottom:0; margin-bottom:0; overflow:hidden; }
+
+.rescue-btn {
+  background:var(--danger); border:1px solid rgba(241,92,109,0.4);
+  color:var(--text); padding:7px 12px; border-radius:8px;
+  font-size:11px; font-weight:800; white-space:nowrap; cursor:pointer;
+  flex-shrink:0;
+}
+
+/* Search bar lebih kecil saat scroll */
+.search-wrap { transition: all .25s ease; }
+.scrolled .search-wrap input { padding:8px 12px !important; font-size:13px !important; border-radius:10px; }
+
+/* ── TONE TOGGLE — lebih kecil & kompak ── */
+.tone-toggle { display:flex; gap:6px; background:rgba(255,255,255,0.04); padding:4px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border); }
+.tone-btn { flex:1; text-align:center; padding:7px 4px; border-radius:7px; background:transparent; border:none; font-size:11px; font-weight:800; color:var(--muted); cursor:pointer; }
+.tone-btn.active.aman { background:var(--lime) !important; color:#000 !important; }
+.tone-btn.active.pro  { background:var(--sky)  !important; color:#000 !important; }
+.tone-btn.active.vn   { background:var(--purple) !important; color:#fff !important; }
+
+#toast{position:fixed;top:20px;left:50%;transform:translate(-50%,-100px);background:var(--lime);color:#000;padding:12px 24px;border-radius:30px;font-weight:800;z-index:9999;transition:0.4s;}
+#toast.show{transform:translate(-50%,0);}
+.m-input,.search-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;color:#fff;font-size:14px;outline:none;margin-bottom:0;}
+.search-input{margin-bottom:0;}
+.nav-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 4px;z-index:200;}
+.nav-item{background:none;border:none;color:var(--muted);font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 4px;}
+.nav-item.active{color:var(--sky);}
+.m-btn{width:100%;background:var(--sky);color:#000;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:14px;}
+.card{background:var(--surf);border-radius:16px;padding:16px;margin-bottom:16px;border:1px solid var(--border);}
+.bubble-in{background:var(--wa-in);padding:12px;border-radius:0 12px 12px 12px;margin-bottom:8px;font-size:13.5px;border:1px solid var(--border);line-height:1.5;}
+.vn-box{background:rgba(168,85,247,0.1);padding:12px;border-radius:8px;border:1px solid var(--purple);}
+.vn-teks{font-style:italic;color:var(--text);font-size:13px;line-height:1.6;}
+.content{padding:16px;padding-bottom:120px;}
+.store-badge{display:block;text-align:center;width:fit-content;margin:0 auto;}
+.nav-icon{font-size:18px;}
+.section-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 12px;}
+.bubble-out{background:var(--wa-out);border-radius:12px 4px 12px 12px;padding:12px;font-size:13px;line-height:1.6;margin-bottom:10px;}
+.btn-copy{background:var(--lime);color:#000;font-weight:800;border:none;padding:12px;border-radius:8px;width:100%;font-size:13px;cursor:pointer;letter-spacing:.3px;}
+.btn-fu{background:transparent;border:1px solid var(--sky);color:var(--sky);font-weight:800;padding:9px;border-radius:8px;width:100%;margin-top:8px;font-size:12px;cursor:pointer;}
+
+/* ══════════════════════════════════════════
+   DESKTOP / LAPTOP / NETBOOK RESPONSIVE
+   ══════════════════════════════════════════ */
+@media (min-width: 600px) {
+  /* Background desktop — beda dari warna app biar ada depth */
+  body {
+    background: #03080b;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  /* Efek cahaya ambient di background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse at 25% 25%, rgba(83,189,235,0.07) 0%, transparent 45%),
+      radial-gradient(ellipse at 75% 75%, rgba(168,85,247,0.07) 0%, transparent 45%);
+  }
+
+  /* App container — tampak seperti HP di meja */
+  #main-app {
+    width: 420px !important;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 8px 32px rgba(0,0,0,0.5),
+      0 32px 80px rgba(0,0,0,0.4);
+  }
+
+  /* Navbar bawah — ikut lebar container */
+  .nav-bottom {
+    left: 50% !important;
+    right: auto !important;
+    width: 420px !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* Modals — tetap full screen (sudah overlay) */
+  #modal-ganti-toko > div,
+  #setup-screen > div {
+    /* sudah centered by flexbox */
+  }
+}
+
+/* Label produk samar di sisi kanan — hanya layar besar */
+@media (min-width: 900px) {
+  body::after {
+    content: 'Klik\AEra';
+    white-space: pre;
+    position: fixed;
+    left: calc(50% + 240px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 52px;
+    font-weight: 900;
+    color: rgba(83,189,235,0.05);
+    pointer-events: none;
+    letter-spacing: -2px;
+    line-height: 1.1;
+  }
+}
+</style>
+</head>
+<body>
+<div id="toast">✅ TERSALIN</div>
+<div id="setup-screen" class="hidden">
+  <div style="background:var(--surf);padding:30px;border-radius:24px;width:90%;max-width:400px;text-align:center;border:1px solid var(--border);position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);">
+    <div style="font-size:32px;margin-bottom:12px;">⚙️</div>
+    <div style="font-size:18px;font-weight:800;color:var(--sky);margin-bottom:8px;">Personalisasi Toko</div>
+    <input type="text" id="setup-toko" class="m-input" placeholder="Nama Toko">
+    <button class="m-btn" onclick="saveSetup()">SIMPAN & MASUK</button>
+  </div>
+</div>
+
+<!-- MODAL GANTI NAMA TOKO (mengganti prompt() yang diblokir HP) -->
+<div id="modal-ganti-toko" class="hidden" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:380px;">
+    <div style="font-size:18px;font-weight:900;color:var(--sky);text-align:center;margin-bottom:6px;">✏️ Ganti Nama Toko</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;">Nama toko muncul di semua template</div>
+    <input type="text" id="input-nama-toko-baru" class="m-input" placeholder="Nama toko baru..." style="margin-bottom:14px;" onkeydown="if(event.key==='Enter') simpanNamaToko()">
+    <div style="display:flex;gap:10px;">
+      <button onclick="tutupModalToko()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:13px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;">Batal</button>
+      <button onclick="simpanNamaToko()" style="flex:2;background:var(--sky);color:#000;border:none;padding:13px;border-radius:10px;font-weight:900;font-size:14px;cursor:pointer;">✅ Simpan</button>
+    </div>
+  </div>
+</div>
+<div id="main-app" class="hidden">
+  <div class="app-header" id="main-header">
+
+    <!-- ROW 1: Logo + Nama Toko -->
+    <div class="h-logo-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="background:var(--sky);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#000;font-size:19px;flex-shrink:0">K</div>
+        <div>
+          <div class="h-logo">Klik<span style="color:var(--sky)">Era</span></div>
+          <div class="h-tagline">Anti-PHP & Anti Mikir</div>
+        </div>
+      </div>
+      <div onclick="gantiNamaToko()" style="cursor:pointer;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <div id="display-toko" style="font-size:11px;padding:5px 12px;background:rgba(83,189,235,0.15);color:var(--sky);border-radius:20px;font-weight:900">TOKO SAYA</div>
+        <div style="font-size:9px;color:var(--sky);font-weight:700;opacity:.7">✎ Ubah Nama</div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Panic buttons (selalu terlihat) -->
+    <div class="h-rescue-label">🚨 SITUASI KRITIS — TEKAN LANGSUNG:</div>
+    <div class="rescue-wrap">
+      <button class="rescue-btn" onclick="triggerRescue('marah')">🤬 PEMBELI MARAH</button>
+      <button class="rescue-btn" onclick="triggerRescue('refund')">💸 MINTA REFUND</button>
+      <button class="rescue-btn" onclick="triggerRescue('nyasar')">📦 COD DITOLAK</button>
+      <button class="rescue-btn" onclick="triggerRescue('penipu')">☠️ DITUDUH PENIPU</button>
+      <button class="rescue-btn" onclick="triggerRescue('bintang 1')">⭐ BINTANG 1</button>
+    </div>
+
+    <!-- ROW 3: Search bar -->
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="search-bar" placeholder="🔍 Ketik situasi... (nawar, marah, ngilang...)" oninput="renderApp()" style="margin-bottom:0">
+    </div>
+  </div>
+    <div class="content">
+    <div id="dynamic-bar" class="card fade-in" style="padding:12px;border:1px dashed var(--sky);background:rgba(83,189,235,0.05);margin-bottom:15px;">
+      <div style="font-size:11px;font-weight:800;color:var(--sky);margin-bottom:10px;">🛠️ PERSONALISASI LIVE — ketik lalu Tab otomatis berubah</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input type="text" id="v-pembeli" class="m-input" style="padding:10px;font-size:12px;" placeholder="👤 Nama pembeli" oninput="scheduleRender()" onblur="renderApp()">
+        <input type="text" id="v-barang"  class="m-input" style="padding:10px;font-size:12px;" placeholder="📦 Nama barang"  oninput="scheduleRender()" onblur="renderApp()">
+        <input type="text" id="v-warna"   class="m-input" style="padding:10px;font-size:12px;" placeholder="🎨 Warna"         oninput="scheduleRender()" onblur="renderApp()">
+        <input type="text" id="v-ukuran"  class="m-input" style="padding:10px;font-size:12px;" placeholder="📏 Size/Ukuran"   oninput="scheduleRender()" onblur="renderApp()">
+      </div>
+    </div>
+    <div id="main-area"></div>
+
+    <!-- ── FOOTER ── -->
+    <div id="app-footer" style="text-align:center;padding:28px 16px 12px;border-top:1px solid var(--border);margin-top:8px;">
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;margin-bottom:6px">
+        Klik<span style="color:var(--sky)">Era</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">120 Template · 3 Mode · Anti-PHP · Anti Mikir</div>
+      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <span style="background:rgba(168,255,62,0.1);border:1px solid rgba(168,255,62,0.3);color:var(--lime);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">✅ Chat Harian</span>
+        <span style="background:rgba(83,189,235,0.1);border:1px solid rgba(83,189,235,0.3);color:var(--sky);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">🎯 Closing Engine</span>
+        <span style="background:rgba(241,92,109,0.1);border:1px solid rgba(241,92,109,0.3);color:var(--red);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">💀 Situasi Kritis</span>
+        <span style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--purple);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px">🎙️ Voice Note Script</span>
+      </div>
+      <div style="font-size:11px;color:var(--border);font-weight:600">Made with 🔥 for Seller Indonesia</div>
+    </div>
+
+  </div> <nav class="nav-bottom">
+    <button class="nav-item active" onclick="switchNav('chat')"><span class="nav-icon">💬</span> Chat Harian</button>
+    <button class="nav-item" onclick="switchNav('favorit')"><span class="nav-icon">⭐</span> Favorit</button>
+    <button class="nav-item" onclick="switchNav('closing')"><span class="nav-icon">🎯</span> Closing</button>
+    <button class="nav-item bonus-tab" onclick="switchNav('bonus')"><span class="nav-icon">🎁</span> Paket Bonus</button>
+  </nav>
+</div>
+<script>
+let STORE_NAME = localStorage.getItem('k_store') || '';
+// ── FAVORIT: tersimpan permanen di HP ──
+let favs = new Set(JSON.parse(localStorage.getItem('k_favs') || '[]'));
+function saveFavs() { localStorage.setItem('k_favs', JSON.stringify([...favs])); }
+
+// Psych section — track yang dibuka tanpa re-render
+let openPsych = new Set();
+function togglePsych(id) {
+  const el  = document.getElementById('psych-body-' + id);
+  const btn = document.getElementById('psych-btn-'  + id);
+  if (!el) return;
+  const isOpen = !el.classList.contains('hidden');
+  if (isOpen) {
+    el.classList.add('hidden');
+    btn.innerHTML = '💡 Tampilkan Alasan';
+    openPsych.delete(id);
+  } else {
+    el.classList.remove('hidden');
+    btn.innerHTML = '▲ Sembunyikan';
+    openPsych.add(id);
+  }
+}
+function toggleFavorit(id) {
+  if (favs.has(id)) { favs.delete(id); } else { favs.add(id); }
+  saveFavs();
+  // Update tombol bintang tanpa re-render full (cepat)
+  const btn = document.getElementById('fav-btn-' + id);
+  if (btn) {
+    btn.innerHTML    = favs.has(id) ? '⭐ Tersimpan' : '☆ Simpan';
+    btn.style.color  = favs.has(id) ? 'var(--warn)' : 'var(--muted)';
+    btn.style.borderColor = favs.has(id) ? 'var(--warn)' : 'var(--border)';
+  }
+  // Kalau lagi di tab favorit, refresh list
+  if (currentTab === 'favorit') renderApp();
+}
+const TEMPLATES = [];
+
+// ==========================================
+// TEMPLATE GELOMBANG 1 (1 - 40)
+// ==========================================
+TEMPLATES.push(
+  // --- FASE 1: CHAT HARIAN UMKM ---
+  {id:1, cat:"Chat Harian", title:"Tanya 'Masih ada kak?'", aliases:["ready","masih","stok","ada"], buyerChat:"Kak barangnya masih ada?", tones:{aman:"Masih ada kak 😊 Mau yang warna {warna} ya, atau mau pilih warna lain?", pro:"Masih ready kak 😊 Kakak mau dikirim ke daerah mana? Biar aku sekalian hitungin ongkirnya ya.", vn: {tempo:"Santai, senyum.", nada:"Kayak nyambut temen.", tekanan:"masih ready lengkap", teks:"Halo {pembeli}, alhamdulillah {barang} masih ready lengkap ya. {pembeli} kebetulan lagi nyari warna {warna} atau ada opsi lain nih?"}}, fu:"{pembeli} kalau bingung milih {barang}-nya tanya aku aja ya 😊", wrong:"Masih kak silakan diorder.", psych:"Jangan cuma jawab 'Masih'. Obrolan pasti mati. Balik nanya biar pembeli membalas.", warning: "Jangan pakai Level Pro kalau jualan barang PO."},
+  {id:2, cat:"Chat Harian", title:"Tanya 'Ori gak kak?'", aliases:["ori","asli","palsu","kw","original"], buyerChat:"Ini beneran ori kak? Takut palsu harganya murah.", tones:{aman:"Ori 100% {pembeli} 😊 Kalau {barang}-nya nyampe beda, bisa diretur dan uangnya balik penuh kok.", pro:"Ori {pembeli} tenang aja 😊 {toko} berani garansi uang kembali 100% kalau {barang}-nya terbukti palsu.", vn: {tempo:"Meyakinkan.", nada:"Percaya diri tinggi.", tekanan:"uang kembali 100%", teks:"Wajar {pembeli} kalau khawatir, banyak tiruan memang. Tapi {barang} di {toko} dijamin ori 100% ya. Kita garansi uang kembali penuh kok kalau terbukti palsu."}}, fu:"Gimana {pembeli}? Aman kan kualitasnya, mau disiapin sekarang?", wrong:"Ori dong kak, cek aja reviewnya.", psych:"Orang nanya 'Ori' butuh rasa aman. Kasih jaminan ekstrem.", warning: "Jangan janjikan uang kembali 100% kalau lu Dropshipper yang belum lihat fisik aslinya."},
+  {id:3, cat:"Chat Harian", title:"Tanya 'Bisa COD gak?'", aliases:["cod","bayar di tempat","cash"], buyerChat:"Kak ini bisa bayar di tempat (COD) gak?", tones:{aman:"Bisa {pembeli} 😊 Pas checkout nanti tinggal pilih metode COD ya.", pro:"Bisa banget {pembeli} 😊 Tapi pastiin nomor WA aktif dan alamatnya lengkap ya biar kurir gak muter-muter.", vn: {tempo:"Normal.", nada:"Ramah mengingatkan.", tekanan:"pastiin nomor WA aktif", teks:"Bisa banget {pembeli} buat bayar COD. Cuma minta tolong ya, pastiin nomor WA-nya aktif sama alamatnya jelas. Kasihan pak kurir sering bingung kalau alamatnya kurang detail."}}, fu:"{pembeli} kalau pas milih opsi COD-nya error, kabarin aku ya.", wrong:"Bisa.", psych:"Mengingatkan soal 'Kasihan Kurir' bikin mereka lebih serius kasih alamat lengkap.", warning: "Jangan pakai VN kalau pembelinya kelihatan udah terbiasa belanja online."},
+  {id:4, cat:"Chat Harian", title:"Tanya 'Muat BB segini gak?'", aliases:["muat","bb","tb","size","ukuran","kekecilan"], buyerChat:"BB 65 TB 155 muat gak kak ya pake L?", tones:{aman:"Kalau BB segitu pasnya pake size {ukuran} {pembeli} biar agak longgar dikit 😊", pro:"Mending ambil ukuran {ukuran} aja {pembeli} 😊 Biar jatuhnya di badan lebih nyaman dan gak engap.", vn: {tempo:"Santai, seperti konsultan gaya.", nada:"Mengarahkan.", tekanan:"mending naikin satu size", teks:"Halo {pembeli}, kalau dengan postur segitu aku saranin ambil size {ukuran} aja. Takutnya kalau ambil kekecilan nanti {pembeli} malah kurang nyaman geraknya."}}, fu:"{pembeli} udah dicek lingkar dadanya? Biar size {ukuran}-nya lebih pasti.", wrong:"Coba cek detail ukuran di foto kak.", psych:"Ambil keputusan buat mereka. Mereka lebih suka 'disuruh' daripada baca tabel.", warning: "Cukup pakai kata 'saran aku' jangan 'pasti muat'."},
+  {id:5, cat:"Chat Harian", title:"Minta Real Pict (Foto Asli)", aliases:["real pict","asli","foto","spill"], buyerChat:"Bisa minta real pictnya kak?", tones:{aman:"Boleh {pembeli}, ini aku fotoin {barang}-nya langsung ya. Warnanya persis kan? 😍", pro:"Siap {pembeli} 😊 Ini aku sempetin fotoin {barang}-nya dari gudang ya biar bisa liat bahannya.", vn: {tempo:"Ramah.", nada:"Melayani.", tekanan:"aku fotoin dadakan", teks:"Boleh banget {pembeli}. Bentar ya ini aku jalan ke gudang dulu buat fotoin dadakan biar {pembeli} bisa liat {barang}-nya langsung."}}, fu:"Gimana {pembeli} foto aslinya? Sesuai ekspektasi kan? 😊", wrong:"Udah ada di foto produk kak.", psych:"Turuti dengan senang hati sebagai ajang pamer kualitas.", warning: null},
+  {id:6, cat:"Chat Harian", title:"Kapan Dikirim / Minta Resi", aliases:["dikirim kapan","resi","lama","hari ini"], buyerChat:"Kak pesenanku kapan dikirim? Resinya mana?", tones:{aman:"Pesanan {barang} udah masuk antrean ya 😊 Resi update otomatis nanti malam kak.", pro:"Paket {barang}-nya udah jalan ya 🚀 Resinya lagi dibawa kurirnya muter pickup, maleman baru diinput.", vn: {tempo:"Santai.", nada:"Mengedukasi.", tekanan:"update massal nanti malam", teks:"Halo {pembeli}, paket {barang}-nya aman udah dibawa kurir ya. Cuma resinya emang update massal nanti malam jam 9. Nanti otomatis masuk notif kok."}}, fu:"{pembeli}, resinya udah masuk notif diaplikasi belum?", wrong:"Tunggu aja nanti malam resinya kak.", psych:"Banyak buyer gak paham resi online update-nya massal malam hari.", warning: "Jangan bilang udah dikirim kalau lu belum packing sama sekali."},
+  {id:7, cat:"Chat Harian", title:"Nanya Barang Habis / Kosong", aliases:["kosong","habis","sold out","warna lain"], buyerChat:"Yahh yang warna sage habis ya kak?", tones:{aman:"Iya {pembeli} maaf banget yang itu sold out 😔 Tapi warna {warna} juga cakep lho.", pro:"Wah telat dikit {pembeli}, barusan diborong orang 😭 Mending ambil warna {warna} aja kak, mirip banget.", vn: {tempo:"Menyesal.", nada:"Memberi solusi.", tekanan:"ambil warna lain", teks:"Aduh {pembeli} sayang, varian itu beneran baru aja habis diserobot orang. Mending {pembeli} ambil {barang} yang warna {warna} aja deh, warnanya mirip banget kok."}}, fu:"Gimana {pembeli}? Mau warna {warna} aja atau nunggu restock?", wrong:"Habis kak.", psych:"Selalu kasih jalan keluar (Subtitusi atau Pre-Order).", warning: null},
+  {id:8, cat:"Chat Harian", title:"Masuk dari Iklan (FB/IG)", aliases:["iklan","fb ads","ig ads","promo"], buyerChat:"Halo, saya lihat promonya dari iklan Instagram.", tones:{aman:"Halo {pembeli} 👋 Makasih udah mampir. Promo diskon {barang}-nya masih ada ya.", pro:"Halo {pembeli} 😊 Promo dari IG itu khusus 10 pembeli pertama hari ini lho, mau diamankan slotnya?", vn: {tempo:"Antusias.", nada:"Menyambut VIP.", tekanan:"promo khusus dari IG", teks:"Halo {pembeli}, makasih udah mampir dari Instagram. Promo diskon {barang} khusus IG masih valid ya. Mau pesen warna {warna} biar aku masukin slot diskonnya?"}}, fu:"{pembeli} promonya terbatas lho, sayang kalau hangus.", wrong:"Silakan pesan aja kak.", psych:"Tembak dengan kepastian promo tersebut pakai 'Scarcity' (Sisa slot).", warning: null},
+  {id:9, cat:"Chat Harian", title:"Nanya Kegunaan / Fungsi", aliases:["buat apa","fungsi","bisa dipakai","cara pakai"], buyerChat:"Ini bisa dipakai buat motoran ujan deres gak kak?", tones:{aman:"Bisa banget {pembeli}! Banyak pelanggan {toko} yang beli {barang} buat itu kok 🙌", pro:"Bisa {pembeli} 😊 Bahannya emang didesain tebal. {pembeli} buat harian atau touring aja?", vn: {tempo:"Meyakinkan.", nada:"Bercerita.", tekanan:"pelanggan kita juga pada pakai", teks:"Bisa banget {pembeli}. Kebanyakan pelanggan kita di {toko} juga beli {barang} ini emang khusus buat motoran kok kak, alhamdulillah aman."}}, fu:"{pembeli} butuh {barang}-nya buat dipakai kapan nih?", wrong:"Bisa kak.", psych:"Orang butuh validasi bahwa 'orang lain juga beli untuk tujuan yang sama'.", warning: null},
+  {id:10, cat:"Chat Harian", title:"Tanya Ongkir Kok Mahal", aliases:["ongkir mahal","berat","kargo","subsidi"], buyerChat:"Ongkirnya mahal banget kak nyampe 100rb.", tones:{aman:"Iya {pembeli} 😅 {pembeli} coba utak-atik voucher gratis ongkirnya dulu ya.", pro:"Emang lumayan {pembeli} ongkirnya 😔 Biar gak rugi, mending beli sekalian 5 pcs pakai Kargo aja biar murah.", vn: {tempo:"Solutif.", nada:"Memberi tips.", tekanan:"pakai kargo aja", teks:"Iya {pembeli} ongkirnya lumayan. Saran aku mending {pembeli} kumpulin pesanan {barang} bareng temen biar nyampe 5 kilo, nanti dikirim pakai Kargo jatuhnya murah banget."}}, fu:"Gimana {pembeli}? Udah aku bantu cekin pakai cargo nih.", wrong:"Iya kak emang jauh.", psych:"Suruh beli banyak sekalian biar rasanya ongkir tersebut sepadan.", warning: null},
+  {id:11, cat:"Chat Harian", title:"Tanya Letak Toko Offline", aliases:["toko offline","alamat toko","offline store"], buyerChat:"Ada toko offlinenya gak kak? Biar liat langsung.", tones:{aman:"Kita jualannya full online {pembeli} 😊 Tapi tenang, kalau {barang}-nya beda sama foto, bisa diretur kok 🙌", pro:"Saat ini kita baru fokus online aja 🙏 Tapi gak usah khawatir zonk, kita garansi uang kembali 100%.", vn: {tempo:"Ramah.", nada:"Meyakinkan.", tekanan:"garansi uang kembali", teks:"Kita gudangnya full online kak. Tapi {pembeli} gak usah takut zonk ya, soalnya {toko} berani kasih garansi uang kembali 100% kalau {barang} yang dateng beda sama di foto."}}, fu:"{pembeli} mau order {barang}-nya via online aja? Ongkirnya lagi diskon lho.", wrong:"Gak ada toko offline.", psych:"Orang nanya toko offline karena takut barang jelek. Obatnya adalah Janji Retur Gampang.", warning: null},
+  {id:12, cat:"Chat Harian", title:"Tanya 'Beneran bagus gak?'", aliases:["beneran bagus","jujur","testimoni"], buyerChat:"Kak jujur deh, ini bahannya beneran bagus gak?", tones:{aman:"Jujur aku sendiri admin {toko} juga pakai {barang} ini di rumah kok 😅 Emang seenak itu.", pro:"Bagus banget {pembeli} 😊 Cek review pembeli lain deh, rata-rata pada kaget barangnya setebal ini.", vn: {tempo:"Jujur, santai.", nada:"Berbagi rahasia.", tekanan:"aku sendiri pakai", teks:"Jujur ya {pembeli}, aku sendiri sebagai admin juga pakai {barang} ini buat harian kok. Soalnya emang bahannya se-nyaman itu. Mau liat foto pemakaian dari aku gak kak?"}}, fu:"{pembeli}, cek ulasan dari pembeli lain juga ya di bawah.", wrong:"Bagus kak.", psych:"Klaim penjual sering dianggap bias. Gunakan cerita personal agar terasa jujur.", warning: null},
+  
+  // --- FASE 2: CLOSING ENGINE ---
+  {id:13, cat:"Closing", title:"Ngeluh 'Mahal ya'", aliases:["mahal","kemahalan","budget"], buyerChat:"Harganya mahal juga ya kak.", tones:{aman:"Emang lumayan {pembeli} harganya 😅 Tapi {barang} ini dipake tiap hari gak gampang rusak lho.", pro:"Iya {pembeli} aku paham emang lumayan 🙏 Cuma {toko} berani jamin {barang} ini awet banget. Jatuhnya malah lebih hemat lho.", vn: {tempo:"Empati.", nada:"Konsultan.", tekanan:"jatuhnya lebih hemat", teks:"Iya {pembeli} aku paham kok emang lumayan. Cuma {barang} ini beda sama yang abal-abal kak. Jatuhnya kakak malah lebih hemat karena awet dipake bertahun-tahun."}}, fu:"{pembeli} kalau budget mepet, aku ada rekomendasi yang lebih ramah di kantong nih.", wrong:"Harga pas kak kualitas terjamin.", psych:"Validasi dulu perasaannya, baru geser fokus dari 'Harga' ke 'Keawetan'.", warning: null},
+  {id:14, cat:"Closing", title:"Bandingin Toko Sebelah", aliases:["sebelah","murah sana","palsu","kw"], buyerChat:"Di toko sebelah kok harganya setengahnya kak?", tones:{aman:"Iya {pembeli} di sana emang lebih murah 😊 Cuma di {toko}, {barang} selalu dicek 2x sebelum dikirim biar aman.", pro:"Pilihan balik ke {pembeli} 😊 Tapi jujur kita lebih milih jual harga wajar tapi kualitas {barang} terjamin.", vn: {tempo:"Percaya diri.", nada:"Memberi peringatan halus.", tekanan:"kita jamin ori", teks:"Wah murah banget itu kak. Cuma kalau di kita emang harganya segini soalnya kita bener-bener ngecek barang 2x biar {pembeli} ga dapet zonk pas unboxing {barang}-nya."}}, fu:"{pembeli} udah mutusin milih yang mana? Kalau butuh real pict kabarin ya 🙌", wrong:"Di sana barang KW kak jangan beli.", psych:"Menjelekkan kompetitor bikin lu terlihat toxic. Jual 'Value Ketenangan' (Bebas zonk).", warning: null},
+  {id:15, cat:"Closing", title:"Nawar Sadis / Afgan", aliases:["nawar","sadis","afgan","diskon"], buyerChat:"Bisa 50rb gak kak? Kalau bisa langsung tf.", tones:{aman:"Aduh kalau segitu belum dapet {pembeli} 😭 Mentok di harga normal deh, tapi aku jamin pilihin yang mulus.", pro:"Maaf banget {pembeli} belum dapet kalau segitu 🙏 Harga {barang} emang udah naik kak. Di harga normal aja ya?", vn: {tempo:"Memelas.", nada:"Minta pengertian.", tekanan:"belum dapet kak", teks:"Aduh {pembeli} sayang, kalau harga segitu aku beneran belum dapet kak, modalnya aja belum nutup 😭 Di harga normal aja ya kak? Nanti aku kasih prioritas packing deh."}}, fu:"{pembeli}, penawaran spesialnya aku hold sampai jam 5 sore ya.", wrong:"Gak bisa kurang kak.", psych:"Tolak halus, kasih harga net lu, lalu kasih 'Pelayanan VIP'.", warning: "Jangan pakai emoji senyum kalau mereka mulai galak."},
+  {id:16, cat:"Closing", title:"Nawar Mentok (Take it or Leave it)", aliases:["nawar","pas nya berapa","mentok","kurangin"], buyerChat:"Kurangin lagi lah kak 10 ribu aja, masa segitu.", tones:{aman:"Maaf banget {pembeli}, harga {barang} udah nett dari pusatnya 🙏", pro:"Aduh {pembeli} itu harganya beneran udah harga aman kita, untungnya mepet banget 😭 Jangan ditawar lagi ya hehe.", vn: {tempo:"Santai.", nada:"Ngomong sama temen.", tekanan:"dimarahin gudang", teks:"Aduh {pembeli}, ini beneran deh harga {barang}-nya udah mentok. Kalau turun lagi nanti aku yang nombok dimarahin orang gudang hehe. Di harga segitu aja ya {pembeli}?"}}, fu:"Gimana {pembeli}? Kalau emang budgetnya kurang pas, aku cariin opsi lain deh.", wrong:"Udah pas harganya kak.", psych:"Alihkan kesalahan ke 'Aturan Bos/Gudang' biar lu gak terlihat pelit.", warning: null},
+  {id:17, cat:"Closing", title:"Minta Ditalangin / Utang", aliases:["paylater","ngutang","kasbon","nanti bayar"], buyerChat:"Bisa bayar bulan depan pas gajian gak kak?", tones:{aman:"Waduh maaf {pembeli}, buat cicilan personal {toko} belum bisa 🙏 Pakai Spaylater aja di aplikasinya.", pro:"Aduh pengen banget ngebantu {pembeli}, tapi sistem di kita gak bisa ngutang 😭 Coba aktifin Paylater aja kak.", vn: {tempo:"Realistis.", nada:"Menolak tegas tapi halus.", tekanan:"sistemnya gak bisa", teks:"Waduh maaf banget {pembeli}, untuk cicilan personal dari toko kita belum ada sistemnya kak. Paling {pembeli} belinya pakai Paylater dari aplikasi aja kak, itu bisa dicicil kok."}}, fu:"{pembeli} mau aku kirimin link checkout {barang}-nya biar gampang pakai Paylater?", wrong:"Gak bisa utang.", psych:"Tolak dengan tegas masalah hutang, tapi berikan solusi Paylater pihak ketiga.", warning: null},
+  {id:18, cat:"Closing", title:"Nawar Lewat Jalur Influencer", aliases:["endorse","artis","influencer","tiktokers"], buyerChat:"Kak aku dari Tiktoknya si A, dapet diskon dong.", tones:{aman:"Halo {pembeli}! Karena {pembeli} dateng dari postingan Kak A, aku kasih diskon deh. Jangan bilang siapa-siapa ya 🤫", pro:"Wah followers sejatinya nih 😍 Boleh {pembeli}, pas checkout {barang} masukin aja kode promonya ya.", vn: {tempo:"Ceria.", nada:"Menyambut komunitas.", tekanan:"jangan bilang siapa-siapa", teks:"Halo {pembeli}, wah followers sejatinya nih. Yaudah khusus buat {pembeli} karena dari TikToknya dia, aku potongin harganya deh. Langsung di-checkout aja ya {barang}-nya."}}, fu:"{pembeli}, kuota diskon influencer-nya sisa 2 orang lagi lho.", wrong:"Gak ada diskon endorse kak.", psych:"Biarkan mereka merasa menang. Kasih diskon kecil sebagai bentuk validasi komunitas.", warning: null},
+  {id:19, cat:"Closing", title:"Nawar Alasan Pelajar/Anak Kost", aliases:["anak kost","pelajar","uang mepet","mahasiswa"], buyerChat:"Harga pelajar dong kak, uang mepet anak kost.", tones:{aman:"Hahaha paham banget {pembeli} 😅 Harga segitu belum bisa. Tapi aku kasih gratis stiker lucu deh. Deal?", pro:"Aduh dedek mahasiswa 😭 Pengen banget ngasih, tapi modal kita mentok. Nanti {barang}-nya aku prioritasin packing aja ya.", vn: {tempo:"Lucu, empati.", nada:"Kakak tingkat.", tekanan:"paham banget deritanya", teks:"Hahaha aduh {pembeli} aku paham banget deritanya anak kost. Tapi mohon maaf harga segitu modal {barang}-nya aja belum nutup. Aku kasih bonus stiker aja ya buat {pembeli}?"}}, fu:"Gimana {pembeli}? Kapan lagi dapet bonus lucu hehe.", wrong:"Gak bisa kak.", psych:"Berikan keistimewaan pelayanan/recehan yang bikin mereka senyum tanpa harus nurunin harga.", warning: null},
+  {id:20, cat:"Closing", title:"Nawar Janji Langganan", aliases:["nawar janji","kalo bagus beli lagi","langganan"], buyerChat:"Kasih murah dong kak, nanti aku langganan deh.", tones:{aman:"Buat awal harganya normal dulu ya {pembeli} 😊 Nanti order kedua baru aku diskon.", pro:"Siap {pembeli}! Buat awalan harganya normal dulu ya biar ngetes {barang}-nya. Next order beneran aku kasih harga grosir deh 🤝", vn: {tempo:"Semangat.", nada:"Janji bisnis.", tekanan:"ngetes kualitasnya dulu", teks:"Wah boleh banget {pembeli}. Gini aja, buat orderan pertama ini harganya normal dulu ya biar {pembeli} puas ngecek kualitasnya. Nanti next order, langsung aku kasih harga grosir."}}, fu:"{pembeli} mau coba 1 pcs {barang} dulu buat ngecek?", wrong:"Boleh kak.", psych:"Banyak orang bohong janji beli banyak. Tahan diskon besarnya sampai dia beneran order grosir.", warning: null},
+  {id:21, cat:"Closing", title:"Buyer Ngilang Abis Nanya Harga", aliases:["mahal terus ngilang","php harga","kabur"], buyerChat:"Oh harganya segitu ya kak. (Lalu hilang)", tones:{aman:"{pembeli} kalau masih bingung milih {barang}, tanya aku aja ya 😊", pro:"{pembeli}, kalau budgetnya lagi kurang pas, aku ada tipe lain selain {barang} yang lebih hemat lho. Mau liat?", vn: {tempo:"Empati.", nada:"Nawarin opsi ringan.", tekanan:"yang lebih hemat lho", teks:"Halo {pembeli}, maaf ganggu. Kalau misalnya {barang} kemaren kerasa kemahalan, ini kita ada stok yang harganya lebih hemat lho. Kualitasnya beda tipis aja. Mau intip gak?"}}, fu:"Ini aku kirim aja ya {pembeli} foto diskonannya.", wrong:"Gimana kak jadinya order gak?", psych:"Buyer hilang setelah tahu harga = gengsi ngomong kemahalan. Kasih 'Jalan Keluar' yang lebih murah.", warning: "Jangan pakai taktik ini ke buyer yang cari barang elit."},
+  {id:22, cat:"Closing", title:"Bikin Buyer Transfer Sekarang", aliases:["transfer","bayar","nanti","besok","nunda"], buyerChat:"Oke kak pesen 1 ya. Nanti sore aku transfer.", tones:{aman:"Siap {pembeli} pesanan {barang}-nya udah aku catet ya 😊 Ditunggu transferannya.", pro:"Siap {pembeli}. Btw kalau {pembeli} bisa transfer sebelum jam 3 ini, {barang}-nya langsung aku duluanin masuk pickup kurir 🚀", vn: {tempo:"Antusias.", nada:"Ngasih jalan pintas.", tekanan:"aku duluanin cetak resinya", teks:"Siap aman. Oh iya {pembeli}, kalau sempet transfer sebelum jam 3 ini, nanti resi {barang}-nya aku duluanin cetak biar langsung dibawa kurir siang ini. Biar cepet nyampe."}}, fu:"{pembeli} pesanannya mau dilepas dulu ke antrean lain atau di-keep?", wrong:"Oke silakan ditransfer.", psych:"Uang buyer gampang pindah haluan. Kasih alasan (Reward Waktu) kenapa dia HARUS bayar sekarang.", warning: "Jangan pakai Level Pro/VN kalau lu tau kurirnya libur."},
+  {id:23, cat:"Closing", title:"Keranjang Dianggurin (Follow Up)", aliases:["keranjang","lupa","belum bayar","checkout"], buyerChat:"(Notif: Barang dimasukkan ke keranjang tapi belum dibayar)", tones:{aman:"Halo {pembeli} 😊 Keranjangnya masih aman ya. Kalau ada kendala pas checkout {barang}, bilang admin ya 🙌", pro:"Malam {pembeli} 😊 Tadi ada kendala kah pas mau bayar {barang}? Biasanya suka error di vouchernya kak.", vn: {tempo:"Tulus.", nada:"Nawarin bantuan.", tekanan:"mentok di vouchernya", teks:"Halo malam {pembeli}, pesanan {barang}-nya masih di keranjang ya. Tadi ada kendala kah pas checkout? Biasanya suka mentok di vouchernya sih, kalau error kabarin aja biar aku bantu cek."}}, fu:"{pembeli}, sayang lho promo {barang}-nya takut keburu hangus.", wrong:"Pesanan belum dibayar tolong segera transfer.", psych:"Datanglah sebagai 'Pahlawan Teknis'. 90% mereka bakal balas dan bayar.", warning: "Tunggu agak maleman sebelum nge-chat ini."},
+  {id:24, cat:"Closing", title:"Bilang 'Pikir dulu / Tanya Suami'", aliases:["pikir","suami","istri","tanya","nabung"], buyerChat:"Aku pikir-pikir dulu ya kak, mau nanya suami.", tones:{aman:"Boleh banget {pembeli}, santai aja diskusinya 😊 Nanti kalau udah sreg, tinggal chat admin ya.", pro:"Silakan {pembeli} 😊 Cuma sekadar info ya stok promo {barang} ini ditahan sampai jam 5 sore aja.", vn: {tempo:"Memaklumi.", nada:"Teman yang ngingetin.", tekanan:"biar gak diserobot", teks:"Boleh banget {pembeli} didiskusiin dulu. Cuma nitip pesen, mumpung hari ini {barang} lagi ada promo, {pembeli} kabarin agak cepetan ya kalau udah deal biar stoknya gak diserobot orang."}}, fu:"Halo {pembeli} 😊 Udah ada keputusan dari obrolan kemarin?", wrong:"Oke ditunggu orderannya.", psych:"Mendesak orang yang lagi mikir cuma bikin risih. Kasih ruang nyaman tapi selipin Scarcity halus.", warning: null},
+  {id:25, cat:"Closing", title:"Upsell (Beli Nanggung Kurang Dikit)", aliases:["kurang dikit","ongkir mahal","nanggung","upsell"], buyerChat:"Totalin ya kak pesenanku.", tones:{aman:"Totalnya 85rb {pembeli}. Kalau belanja 100rb dapet gratis ongkir lho, mau nambah barang lain?", pro:"Halo {pembeli}! Totalnya 85rb ya. Sayang banget kurang 15rb lagi dapet gratis ongkir. Mau nambah pouch lucu aja biar ongkirnya nol?", vn: {tempo:"Antusias.", nada:"Ngasih trik.", tekanan:"sayang banget", teks:"Halo {pembeli}, ini totalnya 85 ribu ya. Tapi sayang banget kurang 15 ribu lagi udah dapet gratis ongkir lho. Daripada bayar ongkir 20 ribu, mending nambah kaos kaki aja biar hemat."}}, fu:"Gimana {pembeli}? Lumayan kan dapet tambahan barang.", wrong:"Kurang 15rb buat free ongkir.", psych:"Jangan biarkan mereka mikir mau nambah apa. Langsung suapi: 'Tambah aksesoris ini aja'.", warning: null},
+  {id:26, cat:"Closing", title:"Cuma di Read / Seen doang", aliases:["read","seen","dibaca","kacang","php","diam"], buyerChat:"(Cuma di-read lebih dari 3 jam)", tones:{aman:"{pembeli} kalau masih bingung soal {barang} atau ada yang belum jelas, santai aja ya 😊 Jangan sungkan nanya.", pro:"Sore {pembeli} 😊 Karena belum ada konfirmasi, pesanan {barang} tadi aku lepas ke antrean lain dulu ya 🙏", vn: {tempo:"Ramah.", nada:"Pamitan profesional.", tekanan:"aku lepas ke antrean lain", teks:"Halo sore {pembeli}, karena belum ada konfirmasi lanjutan soal {barang}, pesanannya terpaksa aku lepas ke antrean pembeli lain dulu ya. Makasih banyak lho udah mampir ke toko kita."}}, fu:"Halo {pembeli} 👋 {toko} baru ada promo gratis ongkir nih hari ini.", wrong:"(Kirim P berkali-kali)", psych:"Tarik paksa barangnya (Takeaway Sale) biar mereka merasa kehilangan haknya (FOMO).", warning: null},
+  {id:27, cat:"Closing", title:"Tanya panjang lebar trus diam", aliases:["detail","banyak tanya","cerewet"], buyerChat:"Oh gitu ya kak, bahannya luntur gak? (Lalu diam)", tones:{aman:"Halo {pembeli}, kayaknya emang paling cocok sama {barang} tipe ini deh. Mau dibantu prosesin sekarang?", pro:"Semua detail {barang} udah sesuai sama yang {pembeli} cari kan 😊 Langsung checkout aja mumpung ready.", vn: {tempo:"Yakin.", nada:"Konsultan.", tekanan:"biar gak pusing nyari lagi", teks:"Halo {pembeli}, dari ngobrol kemaren kayaknya emang {barang} ini yang paling pas buat {pembeli}. Biar gak pusing nyari lagi, langsung aku bungkusin aja ya pesenannya?"}}, fu:"{pembeli} masih cari {barang}-nya? Sini aku bantu pangkas kebingungannya.", wrong:"Jadi order gak?", psych:"Tipe pemilih butuh diyakinkan dengan ketegasan (Assumptive close).", warning: null},
+  {id:28, cat:"Closing", title:"Minta totalan tapi ngilang", aliases:["totalin","rekening","udah transfer"], buyerChat:"Totalin semua jadi berapa kak? (Lalu hilang)", tones:{aman:"Halo {pembeli} 😊 Pesanan {barang} tadi belum direkap nih. Mau di-keep dulu sampai besok atau dibatalin aja?", pro:"Malam {pembeli} 🙏 Pesanan {barang} yang tadi mau tetep dilanjut atau {pembeli} lagi sibuk? Kabarin ya.", vn: {tempo:"Sopan.", nada:"Nanya kepastian.", tekanan:"mau dibatalin aja kak", teks:"Halo {pembeli} selamat malam. Ini pesanan {barang}-nya mau di-keep dulu buat besok atau mau dibatalin aja di sistem kak biar stoknya bisa dibeli orang lain?"}}, fu:"{pembeli} pesanannya fix dibatalin ya hari ini?", wrong:"Tolong segera transfer kak.", psych:"Daripada ngemis minta ditransfer, kasih opsi 'Batal'. Ini memicu rasa tidak enak pada pembeli.", warning: null},
+  {id:29, cat:"Closing", title:"Di-read padahal udah dikasih diskon", aliases:["voucher","hangus","diskon dikasih"], buyerChat:"Makasih ya kak vouchernya. (Lalu hilang)", tones:{aman:"{pembeli} sayang, voucher {barang} yang kemaren kebetulan jam 12 ini hangus lho 😱 Yakin gak mau dipakai?", pro:"Halo {pembeli} 😊 Sekadar ngingetin, sayang lho potongan {barang} nya kalau gak dipakai hari ini.", vn: {tempo:"Panik kecil.", nada:"Mengingatkan.", tekanan:"jam 12 ini hangus lho", teks:"Aduh {pembeli} sayang banget, ini voucher diskon {barang}-nya jam 12 siang ini bakal hangus otomatis dari sistem lho. Yakin nih {pembeli} gak mau dipakai vouchernya? Lumayan banget lho."}}, fu:"{pembeli}, vouchernya udah hangus ya. Mau dibuatin lagi?", wrong:"Kapan dipakai vouchernya kak?", psych:"Orang lebih takut kehilangan barang yang udah di tangan (voucher) daripada tidak mendapatkannya sama sekali.", warning: null},
+  {id:30, cat:"Closing", title:"Follow up janji akhir bulan (Gajian)", aliases:["akhir bulan","gajian","janji beli"], buyerChat:"Nanti akhir bulan ya kak pas gajian aku order.", tones:{aman:"Halo {pembeli}! Sesuai janji bulan lalu, ini aku kabarin ya 😊 {barang}-nya kebetulan ready nih.", pro:"Selamat gajian {pembeli}! 💸 Mumpung uangnya belum kepakai, yuk jajan {barang} impiannya di {toko} 😊", vn: {tempo:"Ceria.", nada:"Ngajak jajan.", tekanan:"mumpung belum kepakai", teks:"Halo {pembeli} selamat gajian yaa! Sesuai obrolan bulan lalu nih, aku ngabarin kalau {barang}-nya ready stok. Mumpung gajiannya belum kepakai buat yang lain, sikat langsung yuk kak!"}}, fu:"{pembeli}, gajiannya udah cair belum nih? Hehe 💸", wrong:"Kak katanya akhir bulan mau beli.", psych:"Kaitkan janji mereka dengan 'Self-Reward' di hari gajian agar mereka merasa layak membelinya.", warning: null},
+
+  // --- FASE 3: SITUASI KRITIS (Penyelamatan Darurat) ---
+  {id:31, cat:"Situasi Kritis", title:"Dituduh Penipu (Lama Sampai)", aliases:["penipu","lama","gak nyampe","bohong"], buyerChat:"WOY PENIPU YA LU! BARANG GUE MANA KOK GAK NYAMPE-NYAMPE!", tones:{aman:"Sabar {pembeli} 🙏 Ini {toko} jualan beneran kok. Paket {barang} lagi nyangkut di kurir, aku bantu komplain ya.", pro:"Astaga {pembeli} sabar dulu ya 🙏 Ini kita jualan halal. Sini aku bantu nelpon agen pusatnya biar {barang}-nya dicari.", vn: {tempo:"Pelan dan tenang.", nada:"Empati tinggi.", tekanan:"jualan halal", teks:"Halo {pembeli}, tenang dulu ya jangan panik. Ini kita {toko} jualan halal kok 100%. Emang ini aku cek resi {barang}-nya nyangkut di gudang ekspedisi. Habis ini aku langsung telepon agen pusatnya buat komplain paksa ya."}}, fu:"{pembeli} laporannya udah aku buatin ke ekspedisi ya.", wrong:"Silakan cek resi sendiri kak.", psych:"Buyer nuduh penipu karena panik. Tunjukkan lu siap pasang badan nelpon kurir buat mereka.", warning: "Jangan debat pakai HURUF KAPITAL."},
+  {id:32, cat:"Situasi Kritis", title:"Barang Rusak / Cacat (Minta Refund)", aliases:["refund","rusak","kembaliin uang","cacat","marah"], buyerChat:"Barangnya sobek nih! Gue mau refund uang gue balik!", tones:{aman:"Waduh maaf banget ya {pembeli} 🙏 Boleh minta foto kerusakan {barang}-nya biar aku cek?", pro:"Astaga maaf banget {pembeli} 😭 Ini murni kelalaian packing {toko}. Boleh minta fotonya biar langsung ditransfer balik uangnya?", vn: {tempo:"Sigap.", nada:"Merasa bersalah.", tekanan:"uang aman 100%", teks:"Ya ampun {pembeli}, maaf banget ya. Ini murni kelalaian anak gudang kita. {pembeli} tenang aja uangnya aman 100% kok. Kirim aja bukti fotonya, langsung aku proses refund uangnya detik ini juga."}}, fu:"{pembeli} mau uangnya direfund ke rekening apa?", wrong:"Bisa direfund asal ada video unboxing utuh.", psych:"Di saat krisis, buyer benci birokrasi. Iyakan dulu refundnya biar emosinya reda.", warning: "Kalau barangnya jutaan, gunakan Level Aman untuk minta video unboxing pelan-pelan."},
+  {id:33, cat:"Situasi Kritis", title:"COD Ditolak / Kurir Nyasar", aliases:["cod","tolak","nyasar","kurir"], buyerChat:"(Kurir lapor paket COD ditolak / alamat tidak ada)", tones:{aman:"Halo {pembeli} 😊 Kata kurirnya alamat kakak susah dicari nih. Boleh shareloc?", pro:"Halo {pembeli} 😊 Maaf ganggu, ini kata pak kurirnya dia muter-muter nyari alamat kakak susah patokannya.", vn: {tempo:"Memelas.", nada:"Minta tolong.", tekanan:"kasihan pak kurirnya", teks:"Halo {pembeli}, maaf ganggu. Ini aku dapet laporan dari kurir katanya dia nyasar nyari alamat {pembeli} ga ketemu. Boleh minta tolong shareloc atau patokan rumahnya? Kasihan pak kurirnya kepanasan muter-muter."}}, fu:"{pembeli} tolong dibalas ya biar pesanan {barang}-nya ga diretur 😭", wrong:"Kak alamatnya yang bener dong.", psych:"Asumsikan kurirnya yang nyasar/gaptek. Kalau lu memelas 'kasihan kurirnya', buyer Indonesia pasti mau bantu.", warning: "Jangan ngancem blacklist sebelum nanya baik-baik."},
+  {id:34, cat:"Situasi Kritis", title:"Paket Hilang di Ekspedisi", aliases:["hilang","paket ilang","dicuri kurir"], buyerChat:"Kak kata kurir paketnya hilang di gudang mereka. Gimana dong?!", tones:{aman:"Maaf atas kendalanya kak 🙏 Ini kita kirim ulang barang barunya ya hari ini.", pro:"Aduh kok bisa sih kurirnya 😭 Maafin kendalanya ya kak. Kakak tenang aja, hari ini juga dikirim ulang. Asuransi ke kurir biar aku yang urus.", vn: {tempo:"Meyakinkan.", nada:"Melindungi buyer.", tekanan:"biar asuransinya aku yang urus", teks:"Astaga {pembeli}, iya ini aku juga baru dapet info paket {barang} nya hilang. Maaf banget ya kak. Kakak ga usah mikirin klaim ke ekspedisi, biar asuransinya aku yang urus. Hari ini aku langsung kirim ulang paket baru."}}, fu:"Paket {barang} gantinya udah jalan ya kak, moga aman.", wrong:"Coba kakak komplain ke CS kurirnya.", psych:"Buyer benci disuruh ngurus klaim ke ekspedisi. Jadilah pahlawan: Ganti barangnya duluan.", warning: "Pastikan status di resi memang FIX HILANG sebelum kirim barang baru."},
+  {id:35, cat:"Situasi Kritis", title:"Ancam Viralin di Sosmed", aliases:["viral","polisi","lapor","sosmed"], buyerChat:"GUE VIRALIN LO DI TIKTOK PENIPU!", tones:{aman:"Mohon tenang {pembeli} 🙏 Kami berniat baik untuk mengganti kerugian kakak full tanpa potongan.", pro:"Astaghfirullah {pembeli} jangan diviralin 😭 Ini kita mau tanggung jawab penuh kok. Sini nomor rekeningnya biar ditransfer balik uangnya.", vn: {tempo:"Cepat, sangat memelas.", nada:"Menyerah total.", tekanan:"aku transfer balik uangnya", teks:"Aduh {pembeli} jangan gitu kak, mohon maaf banget ya atas kesalahannya. Ini murni salah tim kita. Kakak jangan marah ya, sini kirim nomor rekeningnya, detik ini juga aku ganti full uang {pembeli} 100% tanpa potongan apa-apa."}}, fu:"{pembeli}, kami tunggu info rekeningnya ya biar dana dikembalikan.", wrong:"Silakan aja viralin saya gak takut.", psych:"Matikan apinya dengan komitmen mengembalikan uang detik itu juga.", warning: "Jangan pernah merasa menang gengsi di depan customer yang ngamuk bawa massa."},
+  {id:36, cat:"Situasi Kritis", title:"Salah Kirim Barang (Toko yang Salah)", aliases:["salah barang","tertukar","salah warna"], buyerChat:"Kak aku pesen hitam kok dikirim putih sih?!", tones:{aman:"Maaf banget {pembeli} tim packing kita salah masukin 🙏 Bisa diretur gratis kok.", pro:"Aduh maafin tim gudang aku ya {pembeli} 😭 Kakak kirim balik aja barangnya, ongkir kirim sama ongkir baliknya aku yang nanggung 100%.", vn: {tempo:"Rendah hati.", nada:"Bertanggung jawab.", tekanan:"ongkir aku yang nanggung", teks:"Ya ampun {pembeli} beneran dikirim salah warna? Maaf banget ya ampun ini anak packingnya kurang fokus. {pembeli} ajuin retur aja gapapa, ongkir retur dan kirim baliknya biar kita yang nanggung 100% ya."}}, fu:"{pembeli} udah diajuin returnya di aplikasi?", wrong:"Coba dipakai dulu aja kak yang putih bagus juga.", psych:"Kesalahan penjual tidak boleh merugikan pembeli secara uang maupun tenaga. Ambil alih semua biaya.", warning: null},
+  {id:37, cat:"Situasi Kritis", title:"Komplain Karena Gak Baca Deskripsi", aliases:["gak baca","salah order","kekecilan padahal ada size chart"], buyerChat:"Lho kok ukurannya sekecil ini kak?", tones:{aman:"Maaf ya {pembeli} kalau ada miss komunikasi 🙏 Di deskripsi memang ukurannya segitu. Tapi kalau kurang sreg, boleh diretur kok 😊", pro:"Wah {pembeli} gak ngecek deskripsinya dulu ya kemaren? 😅 Gapapa kak santai aja, kirim balik ke alamat aku ya nanti uangnya balik.", vn: {tempo:"Santai.", nada:"Tidak menyalahkan.", tekanan:"gapapa kak santai aja", teks:"Wah {pembeli} kayaknya kemaren kelupaan ngecek detail deskripsinya ya hehe. Tapi gapapa kak santai aja, kalau emang {barang}-nya gak kepake, dikirim balik ke kita aja kak nanti uangnya kita refund."}}, fu:"{pembeli} mau diproses retur atau disimpen aja barangnya?", wrong:"Kan udah ada di deskripsi kak baca makanya.", psych:"Menang debat dengan pembeli tidak akan mendatangkan uang. Mengalah dan beri kemudahan retur.", warning: null},
+  {id:38, cat:"Situasi Kritis", title:"Buka Paket COD Sebelum Dibayar", aliases:["buka paket","cod dibuka","sobek resi"], buyerChat:"Saya buka isinya jelek, saya balikin ke kurir ya.", tones:{aman:"Mohon maaf {pembeli} 🙏 Sesuai aturan kurir, paket COD harus dibayar dulu baru dibuka. Tapi tenang, kalau cacat tetep bisa retur kok 😊", pro:"Aduh {pembeli} jangan dibuka dulu ya kasihan pak kurirnya nanti nombok 😭 Kakak bayar aja dulu, kalau jelek kita garansi uang kembali 100%.", vn: {tempo:"Cepat, khawatir.", nada:"Menyelamatkan kurir.", tekanan:"jangan dibuka dulu", teks:"Aduh {pembeli} tolong jangan dibuka dulu paketnya. Itu aturan dari pusat ekspedisi kak, kalau dibuka kurirnya yang disuruh nombok. Kakak bayar aja dulu ke kurir, nanti kalau {barang} nya jelek, garansinya langsung ke toko aku uangnya balik 100% kok."}}, fu:"Gimana {pembeli}? Paketnya diterima dulu aja ya biar kurirnya jalan.", wrong:"Gak boleh dibuka kak aturannya gitu!", psych:"Edukasi dengan sabar (kasihan kurirnya) dan beri garansi uang kembali dari toko lu sendiri biar dia mau bayar.", warning: null},
+  {id:39, cat:"Situasi Kritis", title:"Balasan Review Bintang 1 (Publik)", aliases:["bintang 1","review jelek","ulasan buruk"], buyerChat:"(Memberikan Bintang 1 tanpa alasan komplain di review)", tones:{aman:"Halo {pembeli}, mohon maaf atas pengalaman buruknya 😔 Kami sudah chat via inbox ya untuk proses garansi.", pro:"Maaf banget mengecewakan ya {pembeli} 😭 Tolong cek inbox ya kak, kita mau tanggung jawab penuh buat ganti rugi 100% atau kirim barang baru.", vn: {tempo:"(Balasan Teks)", nada:"(Ulasan Publik)", tekanan:"tanggung jawab penuh", teks:"Halo kak, mohon maaf atas ketidaknyamanannya. Kami dari {toko} bertanggung jawab penuh atas kualitas {barang}. Kami sudah menghubungi kakak via Chat untuk memproses Retur/Refund 100% tanpa potongan. Terima kasih masukannya 🙏"}}, fu:"{pembeli}, pesannya udah aku balas di inbox ya.", wrong:"Kenapa gak chat dulu malah bintang 1?", psych:"Balasan ulasan buruk bukan buat si pembeli marah, melainkan untuk CALON PEMBELI LAIN yang membaca ulasan toko lu.", warning: "Jangan pernah berantem di kolom review publik. Reputasi lu taruhannya."},
+  {id:40, cat:"Situasi Kritis", title:"Nego Ubah Bintang 1 Jadi 5", aliases:["ubah bintang","revisi ulasan","ganti penilaian"], buyerChat:"Oke kak barang gantinya udah sampai.", tones:{aman:"Halo {pembeli}, barang penggantinya udah sampai kan? 😊 Kalau {pembeli} berkenan, boleh minta tolong direvisi bintangnya kak? 🙏", pro:"Syukurlah kalau udah beres masalahnya ya {pembeli} 🥰 Maaf ngerepotin, kalau lagi santai boleh minta tolong ubah bintangnya kak?", vn: {tempo:"Rendah hati.", nada:"Meminta tolong dengan tulus.", tekanan:"bantuan kakak sangat berarti", teks:"Halo {pembeli}, alhamdulillah kalau {barang} penggantinya udah aman ya. Kak, maaf banget ngerepotin, kalau kakak lagi ada waktu luang sedikiit aja, boleh minta tolong direvisi bintang di ulasannya kak? Bantuan kakak berarti banget buat toko kecil kita."}}, fu:"{pembeli}, kalau berkenan minta waktunya 1 menit aja ya buat revisi bintang 😊", wrong:"Tolong ubah bintangnya dong kak.", psych:"Pastikan masalah sudah clear 100% dan pembeli puas, baru gunakan kartu 'Tolong bantu rating toko kecil kami'.", warning: "Jangan maksa kalau mereka emang males ngubah ulasan."}
+);
+// ==========================================
+// TEMPLATE GELOMBANG 2 (41 - 80)
+// ==========================================
+TEMPLATES.push(
+  // --- FASE 1: CHAT HARIAN LANJUTAN ---
+  {id:41, cat:"Chat Harian", title:"Tanya 'Berapa hari nyampe?'", aliases:["berapa hari","lama kirim","kapan sampai"], buyerChat:"Kak {barang} ini kalau ke rumahku berapa hari nyampenya?", tones:{aman:"Biasanya 2-3 harian {pembeli} 😊 Tergantung ekspedisinya ya.", pro:"Kalau reguler estimasinya 2-3 hari {pembeli} 🚀 Biar cepet diproses hari ini, langsung di-checkout ya.", vn: {tempo:"Normal.", nada:"Informatif.", tekanan:"tergantung kelancaran kurir", teks:"Halo {pembeli}, estimasi normal biasanya 2-3 harian udah nyampe. Tapi balik lagi tergantung kelancaran kurir ya kak. Kalau mau cepet, mending checkout sekarang aja biar langsung aku titipin sore ini."}}, fu:"{pembeli} mau sekalian aku proses sekarang biar cepet jalan?", wrong:"Pasti besok sampai kak.", psych:"Kasih rentang waktu biar aman dari komplain keterlambatan.", warning: "Jangan janji besok sampai kecuali pakai kurir Instan."},
+  {id:42, cat:"Chat Harian", title:"Tanya 'Garansinya gimana?'", aliases:["garansi","kalo rusak","tanggung jawab"], buyerChat:"Kak ini {barang}-nya ada garansinya gak kalau rusak?", tones:{aman:"Ada {pembeli} 😊 Garansi tukar baru ya kalau barang yang dateng cacat.", pro:"Pasti ada dong {pembeli} 😊 Di {toko} kita garansi uang kembali atau tukar baru 100%. Jadi bebas resiko kak.", vn: {tempo:"Tegas, tenang.", nada:"Bikin aman.", tekanan:"garansi penuh", teks:"Tenang aja {pembeli}, untuk {barang} ini kita kasih garansi penuh kok. Nanti kalau pas sampai ternyata ada cacat, {pembeli} chat aku aja, langsung aku ganti baru gratis ongkir."}}, fu:"Gimana {pembeli}? Mumpung {barang}-nya bergaransi, mau di-keep sekarang?", wrong:"Ada kak garansinya.", psych:"Jelaskan BENTUK garansinya (tukar baru / uang kembali) biar mereka benar-benar tenang.", warning: "Jangan janji garansi ganti baru kalau stok cuma sisa 1."},
+  {id:43, cat:"Chat Harian", title:"Tanya 'Beda Tipe A dan B apa?'", aliases:["bedanya apa","pilih mana","mending yang mana"], buyerChat:"Kak bedanya {barang} yang ini sama yang varian satunya apa ya?", tones:{aman:"Bedanya di bahannya {pembeli} 😊 Yang ini lebih tebal dikit.", pro:"Kalau varian ini bahannya lebih premium {pembeli} 😊 Lebih awet. Mending ambil yang ini sekalian kak.", vn: {tempo:"Edukatif.", nada:"Expert.", tekanan:"jauh lebih awet", teks:"Halo {pembeli}, bedanya ada di materialnya. Yang ini dia pakai bahan premium, jadi jatuhnya lebih adem dan awet. Saran aku mending ambil yang ini aja sekalian soalnya selisihnya dikit."}}, fu:"{pembeli} jadinya mau ambil varian yang mana nih?", wrong:"Beda harga aja kak.", psych:"Buyer butuh alasan logis untuk beli yang lebih mahal.", warning: null},
+  {id:44, cat:"Chat Harian", title:"Minta Nama Barang Dirahasiakan", aliases:["privasi","sensor","kado","jangan dikasih tau"], buyerChat:"Kak nanti di resinya nama {barang}-nya disensor ya.", tones:{aman:"Siap {pembeli}, nanti nama produknya aku coret ya 😊", pro:"Aman {pembeli} 🔒 Di resi nanti nama {barang}-nya otomatis disensor dan aku potong kertasnya biar privasi terjaga 100%.", vn: {tempo:"Cepat.", nada:"Kepastian.", tekanan:"privasi aman 100%", teks:"Halo {pembeli}, tenang aja masalah privasi aman 100% ya. Nanti pas nge-print resi, nama {barang}-nya otomatis aku sensor dan coret hitam biar orang rumah gak tau. Langsung dicheckout aja kak."}}, fu:"{pembeli} pesanannya udah dicheckout belum? Biar aku siapkan.", wrong:"Bisa kak.", psych:"Yakinkan mereka bahwa lu menganggap privasi itu serius.", warning: null},
+  {id:45, cat:"Chat Harian", title:"Tanya 'Bisa Dropship/Reseller?'", aliases:["dropship","reseller","jual lagi"], buyerChat:"Kak bisa dikirim pakai nama tokoku gak? Buat dijual lagi.", tones:{aman:"Bisa banget {pembeli} 😊 Nanti tinggal centang opsi dropship pas checkout ya.", pro:"Wah siap banget {pembeli} 🤝 Pesanan dropship selalu kita prioritaskan dan pastinya aman pakai nama toko kakak.", vn: {tempo:"Ramah.", nada:"Menyambut partner.", tekanan:"selalu kita prioritaskan", teks:"Halo {pembeli}, wah seneng banget bisa kerja bareng. Bisa banget kak, pas checkout centang dropship-nya ya. Pesanan reseller selalu kita prioritaskan dan dijamin aman tanpa label toko kita."}}, fu:"{pembeli} kalau butuh foto-foto {barang} buat di-post, bilang aja ya.", wrong:"Bisa kak.", psych:"Sambut dropshipper dengan hangat dan janjikan keamanan nama tokonya.", warning: null},
+
+  // --- FASE 2: CLOSING ENGINE (SOFT FOLLOW UP) ---
+  {id:46, cat:"Closing", title:"Follow Up 'Nanti aku kabari lagi'", aliases:["nanti dikabari","aku mikir dulu","kabar-kabar"], buyerChat:"Oke kak makasih infonya, nanti aku kabari lagi ya.", tones:{aman:"Siap {pembeli} 😊 Ditunggu kabar baiknya ya.", pro:"Siap {pembeli} 😊 Kalau nanti ada yang mau ditanyain lagi soal {barang}-nya, langsung chat aku aja ya jangan sungkan.", vn: {tempo:"Santai.", nada:"Memaklumi.", tekanan:"jangan sungkan", teks:"Siap {pembeli} santai aja. Makasih ya udah nanya-nanya dulu. Nanti kalau butuh detail lebih lanjut soal {barang}-nya, langsung chat aku aja ya, jangan sungkan."}}, fu:"Halo {pembeli} 😊 Udah sreg sama pilihannya atau masih nyari opsi lain?", wrong:"Oke ditunggu belinya.", psych:"Berikan kebebasan tanpa tekanan. Buyer yang merasa tidak dipaksa lebih sering kembali.", warning: null},
+  {id:47, cat:"Closing", title:"Follow Up 'Tunggu Gajian'", aliases:["gajian","nunggu uang","awal bulan"], buyerChat:"Bagus sih kak, tapi nunggu gajian dulu ya hehe.", tones:{aman:"Siap {pembeli}, semoga rezekinya lancar terus ya 😊", pro:"Siap {pembeli}! 💸 Kalau mau, {barang}-nya aku simpankan dulu 1 pcs di belakang biar pas gajian kakak gak kehabisan?", vn: {tempo:"Ceria.", nada:"Diistimewakan.", tekanan:"aku simpankan dulu", teks:"Siap {pembeli}, semoga cepat cair ya gajiannya hehe. Eh tapi kalau {pembeli} udah sreg banget, {barang}-nya mau aku simpankan dulu di belakang gak? Biar nanti pas gajian kakak gak kehabisan."}}, fu:"Halo {pembeli}! Gajiannya udah cair belum nih? Hehe 💸", wrong:"Oke kabarin kalau udah ada uang.", psych:"Tawarkan untuk 'menyimpan barang' untuk mengunci rasa hutang budi.", warning: "Jangan janji simpan barang kalau stok lu perputarannya sangat cepat."},
+  {id:48, cat:"Closing", title:"Follow Up Keranjang ke-2 (H+2)", aliases:["keranjang lama","follow up h+2","diskon sisa"], buyerChat:"(Sudah di-follow up kemarin tapi belum bayar juga)", tones:{aman:"Halo {pembeli} 😊 Pesanan {barang}-nya masih ada di sistem ya kak.", pro:"Halo {pembeli}! Khusus hari ini aku ada voucher gratis ongkir tambahan nih buat pesanan {barang}-nya. Mau diaktifkan?", vn: {tempo:"Berbisik.", nada:"Penawaran rahasia.", tekanan:"khusus hari ini aku ada voucher", teks:"Halo {pembeli}, maaf ganggu lagi. Ini aku liat {barang}-nya masih di keranjang. Gini deh kak, khusus buat {pembeli} hari ini aku buatin voucher diskon tambahan deh. Mau aku aktifkan sekarang?"}}, fu:"{pembeli} vouchernya aktif sampai jam 12 malam ini aja ya.", wrong:"Kok belum dibayar juga kak pesanannya?", psych:"Berikan 'Voucher Sogokan' sebagai upaya terakhir mendobrak keraguan.", warning: "Pastikan lu emang udah nyiapin voucher-nya di aplikasi."},
+  {id:49, cat:"Closing", title:"FOMO Event Kembar / Payday", aliases:["11.11","payday","harbolnas"], buyerChat:"Masih dapet promo eventnya gak kak?", tones:{aman:"Masih {pembeli} 😊 Mumpung harganya masih promo, di-checkout sekarang ya.", pro:"Puncak promonya cuma sampai malam ini {pembeli}! Stok {barang} tipis banget, buruan checkout sebelum server error 😱", vn: {tempo:"Cepat, panik.", nada:"MC Flash Sale.", tekanan:"sebelum servernya down", teks:"Masih dong {pembeli}! Tapi stoknya lagi direbutin banget. Saran aku mending checkout sekarang mumpung aplikasi lancar, kalau maleman servernya down rebutan diskon. Langsung sikat kak!"}}, fu:"{pembeli} promonya sisa 3 jam lagi lho, sayang kalau hangus.", wrong:"Iya lagi promo kak.", psych:"Manfaatkan momen server down/rebutan stok saat event besar untuk mendesak transfer.", warning: null},
+  {id:50, cat:"Closing", title:"Upsell Beli 2 Lebih Murah", aliases:["beli 2","grosir kecil","pasangan"], buyerChat:"Oke kak aku pesen {barang} 1 pcs ya.", tones:{aman:"Siap {pembeli} 😊 Btw kita lagi ada promo beli 2 diskon lho, mau sekalian?", pro:"Siap {pembeli} 😊 Eh tapi sayang banget ongkirnya lho. Mau nambah 1 lagi gak kak? Beli 2 {barang} ini ada potongan khusus 10%.", vn: {tempo:"Santai.", nada:"Saran pintar.", tekanan:"sayang ongkirnya", teks:"Siap {pembeli} pesanannya aku catet. Sekadar saran aja, ini kan sayang ongkirnya masih muat sekilo. Mau nambah 1 lagi gak buat ganti-ganti? Kalau ambil 2 kita ada diskon khusus lho."}}, fu:"Gimana {pembeli}? Kalau enggak, aku langsung proses yang 1 pcs ya.", wrong:"Tambah lagi dong kak.", psych:"Tawarkan pembelian kedua BUKAN sebagai jualan, tapi 'Trik Hemat Ongkir'.", warning: null},
+
+  // --- FASE 3: SITUASI KRITIS (Part 2) ---
+  {id:51, cat:"Situasi Kritis", title:"Resi Gagal Dilacak (Error)", aliases:["resi error","gak bisa ditrack","resi palsu"], buyerChat:"Kak ini resinya kok invalid terus pas aku cek?", tones:{aman:"Halo {pembeli}, kadang sistem kurirnya emang delay update kak 🙏 Tunggu 1x24 jam ya.", pro:"Halo {pembeli} 🙏 Wah iya ini server ekspedisinya lagi error. Tapi kakak tenang aja, paket {barang}-nya fisik udah dibawa kurir kok.", vn: {tempo:"Tenang.", nada:"Info teknis.", tekanan:"fisiknya udah jalan", teks:"Halo {pembeli}, itu biasa kak kadang server resinya lagi down jadi invalid. Tapi {pembeli} tenang, fisik {barang}-nya udah jalan di truk kurir kok. Kita pantau besok pagi ya kak."}}, fu:"{pembeli} resinya udah aku cekin lagi dan udah jalan ya statusnya.", wrong:"Tunggu aja kak.", psych:"Jelaskan bedanya 'Error Sistem' vs 'Fisik Barang' biar mereka tenang.", warning: "Pastikan lu beneran input resi yang benar, bukan typo."},
+  {id:52, cat:"Situasi Kritis", title:"Kurir Belum Pickup Paket", aliases:["belum dipickup","masih dikemas"], buyerChat:"Kak kok statusnya masih dikemas terus? Belum dipickup ya?", tones:{aman:"Maaf ya {pembeli} 🙏 Kurirnya belum dateng ke gudang kita nih, ditunggu ya.", pro:"Aduh iya {pembeli} maaf banget 🙏 Paket {barang} udah siap dari pagi, tapi mobil kurirnya telat pickup. Ini lagi aku tanyain ke kurirnya.", vn: {tempo:"Kesal.", nada:"Satu kubu dengan pembeli.", tekanan:"mobil kurirnya telat", teks:"Halo {pembeli}, aduh maaf banget ya. Padahal paket {barang}-nya udah kita jejerin dari pagi, tapi mobil kurirnya malah telat datengnya. Ini aku lagi telepon agennya biar cepetan ditarik."}}, fu:"{pembeli} alhamdulillah paketnya barusan udah diangkut kurir ya.", wrong:"Belum dipickup sabar aja.", psych:"Alihkan penyebab keterlambatan ke kurir agar toko lu tidak terlihat lamban.", warning: "Jangan pakai alasan ini kalau lu emang telat packing."},
+  {id:53, cat:"Situasi Kritis", title:"Barang Bau Pabrik / Sisa Benang", aliases:["bau","jahitan","lem","gak rapi"], buyerChat:"Kak ini {barang}-nya kok bau lem banget ya? Ada benang sisa.", tones:{aman:"Halo {pembeli}, maaf ya kak 🙏 Itu karena barang baru dari pabrik, tinggal digunting aja sisa benangnya.", pro:"Halo {pembeli} 🙏 Maaf ya, itu bau lem khas barang baru turun dari pabrik kak, diangin-anginin bentar ilang kok.", vn: {tempo:"Edukatif.", nada:"Ngasih solusi.", tekanan:"tanda barang baru banget", teks:"Halo {pembeli}, maaf ya kak itu emang bau khas barang yang baru banget turun dari produksi pabrik. Justru itu tanda barangnya masih fresh. {pembeli} angin-anginin aja semalem nanti baunya ilang total kok."}}, fu:"Gimana {pembeli} baunya udah ilang kan setelah diangin-anginin?", wrong:"Emang gitu kak barangnya.", psych:"Ubah kekurangan minor menjadi 'Keistimewaan' (Tanda barang fresh).", warning: "Kalau rusaknya parah, jangan pakai ini. Suruh retur."},
+  {id:54, cat:"Situasi Kritis", title:"Pembeli Salah Klik Varian", aliases:["salah klik","salah size","aku yang salah"], buyerChat:"Kak maaf aku salah klik {ukuran}, harusnya yang satunya. Bisa tuker gak?", tones:{aman:"Halo {pembeli} 😊 Kalau paketnya udah diterima, bisa dituker kok, ongkir ditanggung kakak ya.", pro:"Waduh salah klik ya {pembeli}? 😂 Gapapa kak santai. Kirim balik aja {barang}-nya, nanti aku kirim yang bener. Ongkir kakak yang tanggung ya.", vn: {tempo:"Tertawa kecil.", nada:"Bantu temen ceroboh.", tekanan:"gapapa kak santai", teks:"Halo {pembeli}, waduh kok bisa salah klik sih kak hehe. Tapi gapapa santai aja, selagi labelnya belum dicopot, kirim balik aja ke gudang. Nanti aku tuker. Cuma ongkir bolak-baliknya {pembeli} yang cover ya."}}, fu:"{pembeli} paket yang salahnya udah dikirim ke kurir belum?", wrong:"Sesuai invoice ya kak.", psych:"Menolong mereka saat mereka salah akan menciptakan loyalitas ekstrem.", warning: "Pastikan ngomong di awal kalau ONGKIR ditanggung mereka."},
+  {id:55, cat:"Situasi Kritis", title:"Marah Karena Chat Lama Dibalas", aliases:["slow respon","lama balas","marah"], buyerChat:"P P P Woy admin lama banget sih balesnya! Niat jualan gak?!", tones:{aman:"Halo {pembeli}, maaf banget ya kak antrean chat kita lagi full 🙏 Ada yang bisa dibantu?", pro:"Ya ampun {pembeli} maaf beribu maaf ya 🙏 Tadi kita lagi kelabakan urus packingan jadi chatnya telat. Sini kak aku prioritasin pesenannya.", vn: {tempo:"Panik sedikit.", nada:"Sangat menyesal.", tekanan:"maaf beribu maaf", teks:"Ya ampun {pembeli}, maaf beribu maaf ya bikin nunggu lama. Tadi aku beneran lagi kelabakan bantu packing di belakang sampai HP-nya gak kepegang. Sini {pembeli}, chat kakak aku prioritasin sekarang."}}, fu:"{pembeli} sekali lagi maaf ya soal slow respon tadi 🙏", wrong:"Sabar kak chat dibalas dari bawah.", psych:"Berikan alasan fisik (lagi bantuin packing) agar mereka mengerti kesibukan lu.", warning: "Jangan pakai alasan packing kalau lu dropshipper."},
+  {id:56, cat:"Situasi Kritis", title:"Komplain Dus/Box Penyok (Isi Aman)", aliases:["dus penyok","box rusak","kemasan jelek"], buyerChat:"Kak ini {barang}-nya dusnya pada penyok gini sih pas nyampe!", tones:{aman:"Maaf ya {pembeli} 🙏 Mungkin kegencet pas di truk kurirnya. Tapi isi {barang}-nya aman kan kak?", pro:"Aduh maafin kurirnya ya {pembeli} 😭 Padahal kardusnya mulus dari sini. Tapi fisik {barang}-nya di dalem aman kan kak?", vn: {tempo:"Menyesal.", nada:"Mengkhawatirkan isi.", tekanan:"yang penting isinya aman", teks:"Halo {pembeli}, aduh iya ampun itu pasti main lempar aja di truk ekspedisinya. Maaf ya kak, padahal dari kita dusnya mulus. Tapi yang paling penting fisik {barang}-nya di dalem masih aman kan kak? Gak cacat kan?"}}, fu:"Syukurlah kalau isinya aman ya {pembeli} 😊", wrong:"Itu dari kurirnya kak bukan kita.", psych:"Alihkan fokus kemarahan dari 'Dus rusak' ke rasa syukur bahwa 'Isi selamat'.", warning: "Kalau isinya ikutan hancur, langsung Refund/Retur."},
+  {id:57, cat:"Situasi Kritis", title:"Minta Retur karena 'Gak Suka'", aliases:["gak suka","berubah pikiran","ekspektasi"], buyerChat:"Kak aku mau retur ya, ternyata pas nyampe aku gak suka modelnya.", tones:{aman:"Maaf {pembeli} 🙏 Kalau barangnya gak cacat, kita gak bisa proses retur karena alasan berubah pikiran ya kak.", pro:"Aduh {pembeli} sayang maaf banget 🙏 Untuk {barang} kita cuma nerima retur kalau ada cacat pabrik aja kak. Kalau alasan kurang sreg belum bisa di-acc 😔", vn: {tempo:"Tegas.", nada:"Menolak profesional.", tekanan:"belum bisa kita acc", teks:"Halo {pembeli}, aduh maaf banget kak. Sesuai aturan toko kita, kalau barangnya dalam kondisi bagus, returnya belum bisa di-acc kak kalau cuma karena kurang sreg atau berubah pikiran. Maaf banget ya {pembeli}."}}, fu:"Maaf ya {pembeli} 🙏", wrong:"Gak bisa kak, baca dong rules toko.", psych:"Tolak dengan tegas tapi gunakan bahasa memelas ('belum bisa di-acc sistem').", warning: "Kalau platform lu ada 'Bebas Pengembalian', lu wajib terima."},
+  {id:58, cat:"Situasi Kritis", title:"Cancel Pesanan Udah Dipacking", aliases:["batal","cancel","udah dipacking"], buyerChat:"Kak tolong acc pembatalanku ya, aku mau ganti ukuran.", tones:{aman:"Waduh {pembeli} paket {barang}-nya udah terlanjur dipickup kurir 🙏 Udah gak bisa dicancel.", pro:"Aduh {pembeli} telat banget 😭 Paket {barang}-nya udah masuk karung dan dibawa kurir barusan. Jadi otomatis ditolak sistem cancelnya.", vn: {tempo:"Panik kecil.", nada:"Menyesal tidak bisa membantu.", tekanan:"udah dibawa mas kurir", teks:"Aduh {pembeli} sayang telat banget ngabarinnya. Paket {barang}-nya udah ditumpuk di karung dan dibawa kurir barusan banget. Jadi kita udah gak bisa narik lagi buat dicancel. Maaf banget ya kak."}}, fu:"Nanti kalau paketnya sampai diterima aja ya {pembeli}.", wrong:"Gak bisa dicancel paket udah packing.", psych:"Alihkan alasan penolakan bahwa paketnya FISIKNYA sudah diangkut kurir.", warning: "Kalau paket belum dipacking sama sekali, mending acc aja."},
+
+  // --- FASE 4: RETENSI LANJUTAN ---
+  {id:59, cat:"Retensi", title:"Minta Foto Testimoni Asli", aliases:["minta foto","spill foto","testi"], buyerChat:"Makasih ya kak {barang}-nya mantap banget dipakenya.", tones:{aman:"Sama-sama {pembeli} 😊 Boleh minta tolong difotoin pas dipake gak kak buat testi?", pro:"Wah seneng banget denger {pembeli} suka 😍 Kalau gak keberatan, boleh minta foto pas kakak pakai {barang}-nya? Biar aku pajang di IG {toko} 🙌", vn: {tempo:"Antusias.", nada:"Memuji pembeli.", tekanan:"aku pajang di IG", teks:"Wah alhamdulillah kalau {pembeli} suka. Oh iya kak, kalau fotonya cakep, boleh dong di-share ke aku foto pas kakak pakai {barang}-nya. Nanti mau aku pajang di story IG toko kita kak buat testimoni."}}, fu:"Fotonya cakep banget {pembeli}, makasih ya udah dikirim! 🥰", wrong:"Kak minta foto review dong.", psych:"Berikan mereka 'Panggung' (Misal dipajang di IG). Orang suka memamerkan barang bagus.", warning: null},
+  {id:60, cat:"Retensi", title:"Follow Up Kepuasan (Pasca Terima)", aliases:["follow up terima","tanya kualitas","gimana barangnya"], buyerChat:"(Paket terkirim 2 hari yang lalu)", tones:{aman:"Halo {pembeli} 😊 {barang}-nya udah dicoba? Ada kendala gak kak?", pro:"Halo {pembeli} 🥰 Cuma mau mastiin aja nih, {barang} yang kemaren dateng kualitasnya aman kan kak? Gak cacat?", vn: {tempo:"Peduli.", nada:"Customer Care premium.", tekanan:"cuma mau mastiin", teks:"Halo {pembeli} selamat siang. Maaf ganggu sebentar. Ini dari {toko} cuma mau mastiin pesanan {barang}-nya yang kemaren sampai. Sejauh ini aman dan enak dipakai kan kak? Kalau ada bingung cara pakenya, chat aja ya."}}, fu:"Syukurlah kalau aman {pembeli}, awet-awet ya pakainya 😊", wrong:"Jangan lupa bintang 5 nya kak.", psych:"Seller yang menanyakan kabar barang akan diingat seumur hidup oleh pembeli.", warning: "Lakukan ini hanya jika lu yakin kualitas barang lu bagus."},
+  {id:61, cat:"Retensi", title:"Penawaran Member Eksklusif (New Arrival)", aliases:["new arrival","koleksi baru"], buyerChat:"(Broadcast Produk Baru)", tones:{aman:"Halo {pembeli}, kita baru masuk {barang} tipe baru nih. Dicek yuk 😊", pro:"Halo {pembeli} 🥰 Kita baru aja kedatangan koleksi {barang} terbaru nih. Info ini sengaja aku sebar ke pelanggan setia aja biar bisa milih duluan 🙌", vn: {tempo:"Berbisik.", nada:"Membagi rahasia.", tekanan:"biar bisa milih duluan", teks:"Halo {pembeli} selamat siang. Ini aku mau ngabarin rahasia nih. Kita baru aja nurunin {barang} paling baru di gudang. Belum aku up di toko ya kak, aku tawarin ke pelanggan langganan kayak {pembeli} dulu biar milih duluan."}}, fu:"Gimana {pembeli}? Mumpung warnanya masih komplit nih.", wrong:"Ayo dibeli kak barang baru kita.", psych:"Memberikan 'Akses Pertama' membuat mereka merasa punya privilege.", warning: null},
+  {id:62, cat:"Retensi", title:"Ajak Follow Sosmed (Tiktok/IG)", aliases:["follow sosmed","ig","tiktok"], buyerChat:"Oke kak makasih ya pesananku udah sampe.", tones:{aman:"Sama-sama {pembeli} 😊 Jangan lupa follow IG {toko} ya kak.", pro:"Sama-sama {pembeli} 🥰 Oh iya, kalau follow Tiktok/IG kita, kabarin ya. Nanti aku kasih kupon rahasia buat diskon belanja berikutnya 🤫", vn: {tempo:"Ceria.", nada:"Memberi insentif.", tekanan:"kupon diskon rahasia", teks:"Alhamdulillah sama-sama {pembeli}. Sekalian nitip pesan ya kak, kalau punya IG atau Tiktok, jangan lupa follow {toko}. Kalau udah follow kirim screenshotnya ke sini, langsung aku kasih kupon diskon rahasia buat orderan selanjutnya."}}, fu:"{pembeli} udah difollow belum sosmed kita? Sayang lho diskonnya.", wrong:"Follow IG kita ya kak.", psych:"Tawarkan 'Suap' (Kupon Rahasia) agar mereka mau follow sosmed lu.", warning: null},
+  {id:63, cat:"Retensi", title:"Toko Buka Kembali Setelah Libur", aliases:["buka lagi","libur selesai","aktif lagi"], buyerChat:"(Broadcast setelah toko libur panjang)", tones:{aman:"Halo {pembeli} 😊 Toko kita udah buka lagi ya kak, pesanan udah bisa diproses.", pro:"Halo {pembeli}! 👋 Minal aidin kak. {toko} udah aktif packing lagi nih. Buat pesanan {barang} yang sempat ketunda kemarin, udah bisa dicheckout ya 🚀", vn: {tempo:"Energik.", nada:"Siap tempur.", tekanan:"udah aktif packing lagi", teks:"Halo {pembeli}, apa kabar? Semoga sehat terus ya. Ini kita dari {toko} ngabarin kalau mulai hari ini gudang kita udah full aktif packing lagi kak. Jadi pesanan {barang}-nya yang kemaren sempet ditolak karena libur, udah bisa dicheckout lagi ya."}}, fu:"{pembeli} pesenannya mau aku bantu rekapin ulang gak biar gampang?", wrong:"Toko sudah buka silakan belanja.", psych:"Sangat efektif untuk membangkitkan 'keranjang yang mati' selama libur.", warning: null},
+  {id:64, cat:"Retensi", title:"Terima Kasih Murni (Tanpa Jualan)", aliases:["terima kasih","anniversary toko"], buyerChat:"(Kirim saat Anniversary Toko / Akhir Tahun)", tones:{aman:"Halo {pembeli}, makasih ya udah langganan di toko kita selama ini 🙏", pro:"Halo {pembeli} 🥰 Gak kerasa udah akhir tahun. {toko} cuma mau bilang makasih banyaak ya atas kepercayaannya selama ini. Doa terbaik buat kakak 🙏", vn: {tempo:"Sangat tulus.", nada:"Terharu.", tekanan:"makasih banyaak banget", teks:"Halo {pembeli}, chat ini gak ada maksud jualan kok hehe. Aku dari admin {toko} cuma pengen bilang makasih banyaak dari hati atas dukungan dan orderannya selama ini. Berkat {pembeli}, toko kecil kita bisa terus bertahan. Makasih banyak kak."}}, fu:"(JANGAN ADA FOLLOW UP JUALAN DI SINI)", wrong:"Makasih udah belanja, ayo order barang baru.", psych:"Toko yang MURNI berterima kasih tanpa jualan akan memenangkan hati pembeli seumur hidup.", warning: "JANGAN SELIPKAN PROMO DI CHAT INI."},
+
+  // --- FASE 5: LOGISTIK & DROPSHIP ---
+  {id:65, cat:"Chat Harian", title:"Tanya Pengiriman Instan / Sameday", aliases:["instan","sameday","gojek","grab"], buyerChat:"Kak {barang}-nya bisa dikirim pakai Gojek hari ini gak?", tones:{aman:"Bisa {pembeli} 😊 Asal checkout sebelum jam 3 sore ya biar dapet driver.", pro:"Bisa banget {pembeli} 🛵 Tapi mending checkout sekarang ya, soalnya kalau agak sorean biasanya nyari drivernya susah.", vn: {tempo:"Sigap.", nada:"Ngasih tau urgensi.", tekanan:"susah dapet drivernya", teks:"Bisa banget {pembeli} pakai Instan. Cuma saran aku mending dicheckout sekarang aja kak mumpung driver lagi banyak. Kalau udah sore biasanya nyari drivernya susah dan pesanan malah ketunda besok."}}, fu:"{pembeli} drivernya udah mau berangkat nih, mau diangkut sekalian gak?", wrong:"Bisa kak.", psych:"Gunakan fakta 'Driver susah dicari sore hari' buat ngedesak buyer checkout sekarang.", warning: "Jangan acc instan kalau stok barang lu di gudang lagi habis."},
+  {id:66, cat:"Chat Harian", title:"Alamat Salah Setelah Di-Checkout", aliases:["salah alamat","ganti alamat"], buyerChat:"Kak maaf aku salah RT, bisa diganti gak alamatnya?", tones:{aman:"Halo {pembeli}, kalau {barang}-nya belum dikirim, kakak bisa ajuin batalin dulu terus order ulang ya 😊", pro:"Waduh {pembeli} paketnya udah dibungkus dan masuk sistem 😭 Nanti pas kurirnya telepon, kakak arahin aja langsung ya.", vn: {tempo:"Solutif.", nada:"Menenangkan.", tekanan:"nanti arahin aja kurirnya", teks:"Halo {pembeli}, aduh resinya kebetulan udah kecetak dan masuk sistem ekspedisi kak. Kalau dari aku udah gak bisa ngedit. Tapi tenang aja, nanti pas kurirnya udah deket dan nelepon, {pembeli} arahin aja RT yang bener ke kurirnya ya."}}, fu:"{pembeli} paketnya udah dibawa kurir ya, di-standby aja HP-nya.", wrong:"Udah gak bisa kak resi udah cetak.", psych:"Kasih solusi 'nanti arahin kurirnya pas nelepon' biar mereka lega.", warning: "Jangan pernah janjiin bisa ganti alamat manual pakai spidol."},
+  {id:67, cat:"Chat Harian", title:"Beli 3 Barang, Tapi 1 Habis", aliases:["barang habis","sebagian kosong"], buyerChat:"Kak aku udah pesen 3 {barang} ya, tolong diproses.", tones:{aman:"Halo {pembeli}, maaf banget yang 1 warna {warna} kosong 🙏 Mau diganti warna lain atau direfund yang 1 aja?", pro:"Aduh {pembeli} sayang maafin kita ya 😭 Ternyata yang warna {warna} ada reject jadi aku gak berani kirim. Mau ganti warna lain aja?", vn: {tempo:"Merasa bersalah.", nada:"Profesional.", tekanan:"aku refund aja selisihnya", teks:"Halo {pembeli}, ampun kak maaf banget. Ini dua {barang}-nya udah siap, tapi yang warna {warna} ternyata ada cacat sedikit, aku gak berani ngirim. Mau diganti warna lain kak? Atau yang satu ini aku refund aja selisih uangnya?"}}, fu:"{pembeli} ditunggu konfirmasinya ya biar paketan yang 2 ini gak ketunda.", wrong:"Yang satu kosong kak.", psych:"Kasih KENDALI ke mereka: mau refund selisihnya atau ganti warna.", warning: null},
+  {id:68, cat:"Chat Harian", title:"Minta Nota Dikosongin (Kado)", aliases:["kado","nota kosong","jangan dikasih harga"], buyerChat:"Kak nanti jangan dikasih nota harga ya, buat kado soalnya.", tones:{aman:"Siap {pembeli} 😊 Nanti resi dan notanya aku potong bagian harganya ya.", pro:"Aman 100% {pembeli} 🎁 Nanti harganya aku coret hitam dan invoice-nya gak aku masukin. Biar kado {barang}-nya rahasia.", vn: {tempo:"Ceria.", nada:"Mendukung kejutan.", tekanan:"dijamin aman 100%", teks:"Siap {pembeli} aman bosku! Nanti di dalam paket gak aku kasih nota. Terus di kertas resi luar, bagian harganya aku potong sekalian. Dijamin aman 100% buat kado kak."}}, fu:"{pembeli} pesanannya udah masuk nih, aku proses kado ya.", wrong:"Oke kak.", psych:"Meyakinkan soal privasi harga sangat penting buat pembeli kado.", warning: null},
+  {id:69, cat:"Chat Harian", title:"Tanya Cocok Gak Buat Kado?", aliases:["kado","hadiah","pantes gak"], buyerChat:"Kak {barang} ini kalau dijadiin kado pantes gak ya? Kelihatan murahan gak?", tones:{aman:"Pantes banget {pembeli} 😊 Kemasannya juga udah rapi kok dari kita.", pro:"Wah cocok banget {pembeli} 🎁 {barang} ini aslinya kelihatan mewah dan tebal. Dijamin yang nerima kado pasti suka kak.", vn: {tempo:"Antusias.", nada:"Meyakinkan.", tekanan:"kelihatan barang mahal", teks:"Wah kalau buat kado sih ini recommended banget {pembeli}. Aslinya ini bahannya kelihatan mahal kak, gak kelihatan murahan sama sekali. Nanti packing-nya juga aku kasih bubble wrap dobel biar dusnya gak penyok buat kado."}}, fu:"{pembeli} mau sekalian aku tulisin kartu ucapan selamat gak di dalemnya?", wrong:"Bagus kok kak.", psych:"Validasi ketakutannya dan bilang 'kelihatan mewah'.", warning: null},
+  {id:70, cat:"Chat Harian", title:"Minta Kartu Ucapan / Greeting Card", aliases:["kartu ucapan","tulisin pesan"], buyerChat:"Kak bisa tolong tulisin ucapan di kertas gak buat diselipin di paket?", tones:{aman:"Bisa {pembeli} 😊 Nanti kakak ketik aja ucapannya di kolom catatan pas checkout ya.", pro:"Dengan senang hati {pembeli} 🥰 Nanti aku tulisin pakai kertas cakep deh. Tulis aja ucapannya di chat ini kak.", vn: {tempo:"Sangat ramah.", nada:"Siap membantu total.", tekanan:"dengan senang hati", teks:"Wah dengan senang hati {pembeli}. Nanti aku cariin kertas yang bagus sekalian aku tulisin manual pakai tulisan tangan ya. {pembeli} kirim aja teks ucapannya di chat ini, nanti aku yang salin."}}, fu:"{pembeli} ucapannya udah aku tulisin ya, paketnya udah siap jalan 🚀", wrong:"Gak ada kartu ucapan kak.", psych:"Layanan ekstra kayak nulis kartu ucapan akan otomatis ngasih lu Bintang 5.", warning: null},
+  {id:71, cat:"Situasi Kritis", title:"Trauma Ditipu Belanja Online", aliases:["takut nipu","trauma"], buyerChat:"Kak aku pernah ketipu beli {barang}, ini tokonya beneran amanah kan?", tones:{aman:"Insyaallah amanah {pembeli} 😊 Kita jualan udah lama kok, cek aja reviewnya ya.", pro:"Wajar {pembeli} kalau takut 😔 Tapi {toko} dijamin 100% amanah kak, kalau {barang}-nya beda, uang kakak aku garansi balik utuh.", vn: {tempo:"Empati tinggi.", nada:"Bikin adem.", tekanan:"garansi uang kembali 100%", teks:"Halo {pembeli}, aku ngerti banget rasanya pasti trauma. Tapi tenang aja, kita di {toko} jualan nyari berkah kak. Kalau misalkan nanti {barang} yang dateng jelek, aku kasih garansi uang kembali 100% tanpa ribet."}}, fu:"Gimana {pembeli}? Udah tenang kan? Mau aku proses sekarang pesanannya?", wrong:"Amanah dong kak kita jujur.", psych:"Validasi rasa traumanya ('wajar kak'), lalu kunci pakai Garansi Uang Kembali.", warning: null},
+  {id:72, cat:"Situasi Kritis", title:"Komplain Barang Kurang Jumlah", aliases:["barang kurang","beli 3 datang 2"], buyerChat:"Kak aku pesen {barang} 3 pcs, kok yang datang di paket cuma 2?!", tones:{aman:"Astaga maaf banget {pembeli} 🙏 Boleh difoto resi dan isi paketnya? Nanti langsung aku refund selisihnya.", pro:"Ya ampun {pembeli} maafin tim packing {toko} ya kurang teliti 😭 Kakak mau sisa 1 {barang}-nya disusulin kirim besok gratis ongkir, atau di-refund aja uangnya?", vn: {tempo:"Sigap.", nada:"Menawarkan solusi.", tekanan:"mau disusulin atau refund", teks:"Ya ampun {pembeli}, maafin tim packing gudang kita ya kak kurang teliti ngitungnya. Tapi hak kakak gak akan ilang kok. {pembeli} mau {barang}-nya aku susulin kirim besok gratis ongkir, atau mau aku refund selisih uangnya sekarang?"}}, fu:"{pembeli} ditunggu konfirmasinya ya biar langsung aku beresin sekarang 🙏", wrong:"Coba dicek lagi kak di dalam kardusnya.", psych:"Kasih KENDALI ke mereka: mau refund atau kirim ulang.", warning: "Kalau nominalnya besar, wajib minta bukti foto/video unboxing sebelum refund."},
+  {id:73, cat:"Situasi Kritis", title:"Uang Refund Belum Masuk", aliases:["refund belum masuk","uang belum balik"], buyerChat:"Kak kan orderan {barang} udah batal, tapi uangku kok belum masuk rekening?", tones:{aman:"Halo {pembeli} 😊 Untuk refund dana otomatis diurus sama sistem aplikasi ya kak. Ditunggu maksimal 1x24 jam.", pro:"Halo {pembeli} 🙏 Jangan panik ya kak, uangnya aman. Kalau pembatalan, dananya itu otomatis ditahan sama pihak aplikasi. Biasanya butuh 1-2 hari kerja kak.", vn: {tempo:"Edukatif.", nada:"Menjelaskan sistem.", tekanan:"uangnya ditahan aplikasi", teks:"Halo {pembeli}, tenang dulu kak uangnya gak hilang kok. Sistemnya kalau batal, uangnya ditahan sama pihak aplikasi dan mereka yang bakal nge-refund ke rekening kakak. Memang butuh waktu proses 1-2 hari kerja kak. Pasti masuk kok."}}, fu:"{pembeli} dananya udah masuk ke saldo belum hari ini?", wrong:"Gak tau kak itu urusan aplikasi.", psych:"Buyer awam mikir uang refund ada di lu. Lu harus sabar ngajarin bahwa uangnya ada di pihak aplikasi.", warning: "Jangan suruh mereka hubungin CS aplikasi dulu, suruh nunggu 1-2 hari."},
+  {id:74, cat:"Situasi Kritis", title:"Salah Transfer Nominal (Kelebihan)", aliases:["salah tf","kelebihan transfer"], buyerChat:"Kak maaf aku salah ngetik, transfer {barang} harusnya 150rb malah 250rb 😭", tones:{aman:"Ya ampun {pembeli} kelebihan 100rb ya? 😊 Sini kirim nomor rekeningnya biar aku balikin selisihnya.", pro:"Hahaha gapapa {pembeli} santai aja 😂 Ini selisihnya 100rb langsung aku transfer balik ke rekening kakak sekarang ya.", vn: {tempo:"Ceria.", nada:"Orang jujur.", tekanan:"langsung aku transfer balik", teks:"Hahaha aduh {pembeli} kok bisa kelebihan banyak ngetiknya. Tapi tenang kak, aku jualan nyari berkah kok. Ini uang selisihnya 100 ribu langsung aku transfer balik ke rekening {pembeli} ya detik ini juga."}}, fu:"{pembeli} uang lebihnya udah aku transfer balik ya, dicek kak.", wrong:"Oke kak makasih kelebihannya.", psych:"Mengembalikan uang lebih detik itu juga akan mengubah buyer ini jadi pelanggan seumur hidup.", warning: null},
+  {id:75, cat:"Closing", title:"Minta Tahan Pesanan Seminggu (Keep)", aliases:["keep dulu","tahan dulu","jangan dijual"], buyerChat:"Kak {barang}-nya tolong di-keep dulu ya, minggu depan aku bayar.", tones:{aman:"Maaf {pembeli} 🙏 Di {toko} batas maksimal keep barang cuma 1x24 jam aja kak.", pro:"Aduh {pembeli} pengen bantu, tapi sistem gudang kita maksimal nge-keep barang cuma 2 hari kak 😭 Kalau seminggu takut keburu dibeli orang.", vn: {tempo:"Ragu-ragu.", nada:"Menolak halus.", tekanan:"takut keburu dibeli orang", teks:"Halo {pembeli}, jujur pengen banget nge-keep. Tapi dari aturan gudang maksimal nahan barang itu cuma 2 hari kak. Kalau sampai seminggu, aku takutnya {barang}-nya keburu diserobot pembeli lain yang langsung transfer. Maaf banget ya."}}, fu:"{pembeli} mumpung {barang}-nya masih ada di rak, mau diamankan hari ini aja?", wrong:"Boleh kak.", psych:"Gunakan 'Aturan Gudang' untuk menolak nge-keep barang tanpa menyakiti hati pembeli.", warning: "JANGAN pernah mau nge-keep kalau stok nipis."},
+  {id:76, cat:"Retensi", title:"Repeat Order Minta Bonus Khusus", aliases:["bonus lagi","pelanggan lama minta diskon"], buyerChat:"Kak aku order {barang} lagi nih ke-3 kalinya, dapet bonus dong.", tones:{aman:"Makasih {pembeli} udah langganan 😍 Nanti di paket aku selipin stiker lucu ya.", pro:"Hahaha siap {pembeli} bosku! 🫡 Karena udah repeat order terus, pesanan ini langsung aku kasih prioritas jalur VIP packing ya.", vn: {tempo:"Ceria, hangat.", nada:"Melayani VIP.", tekanan:"prioritas jalur VIP", teks:"Wahahaha siap {pembeli}, makasih banyak lho kepercayaannya order ke-3 kali. Kalau bonus barang emang lagi kosong kak, tapi pesanan {barang} ini langsung aku masukin antrean prioritas VIP ya. Langsung aku packingin sekarang."}}, fu:"{pembeli} paket VIP-nya udah dibawa kurir ya 🚀", wrong:"Gak ada bonus kak.", psych:"Jadikan 'Prioritas Packing / Layanan Cepat' sebagai bonus eksklusif kalau lu gak bisa ngasih barang gratisan.", warning: null},
+  {id:77, cat:"Chat Harian", title:"Tanya Perawatan Biar Awet", aliases:["cara cuci","perawatan","biar awet"], buyerChat:"Kak {barang} ini biar awet cara perawatannya gimana ya?", tones:{aman:"Halo {pembeli} 😊 Gampang kok kak, jangan dijemur di bawah matahari langsung ya.", pro:"Gampang banget {pembeli} 👍 Tips dari aku, biar {barang}-nya awet bertahun-tahun, hindari bahan kimia keras kak.", vn: {tempo:"Ahli.", nada:"Konsultan.", tekanan:"tips rahasianya", teks:"Halo {pembeli}, tips rahasianya biar {barang} ini awet bertahun-tahun, usahakan jangan sampai kena bahan kimia keras ya kak. Sama kalau mau bersihin, cukup pakai lap microfiber aja udah bersih kok. Simpel banget kak."}}, fu:"{pembeli} ada lagi yang mau ditanyain soal detail {barang}-nya?", wrong:"Biasa aja kak perawatannya.", psych:"Seller yang ngerti cara merawat barangnya akan terlihat 10x lebih pro di mata pembeli.", warning: null},
+  {id:78, cat:"Chat Harian", title:"Tanya Expired Date / Kadaluarsa", aliases:["exp","expired","kadaluarsa"], buyerChat:"Kak ini {barang}-nya masa expired-nya kapan ya? Aman kan?", tones:{aman:"Aman {pembeli} 😊 Expired-nya masih lama banget kok, tahun depan.", pro:"Aman banget {pembeli} 👍 Stok kita muter terus kak tiap minggu barang baru masuk. Jadi {barang} ini expirednya dijamin masih panjang.", vn: {tempo:"Tegas, yakin.", nada:"Garansi keamanan.", tekanan:"stok kita selalu baru", teks:"Halo {pembeli}, aman 100% kak. Toko kita perputaran barangnya cepet banget kak, tiap minggu selalu turun stok fresh. Jadi untuk {barang} ini expirednya masih sangat panjang. Silakan diorder kak."}}, fu:"{pembeli} mau pesen berapa pcs nih mumpung stok fresh baru turun?", wrong:"Masih lama kak.", psych:"Kata 'Barang perputarannya cepat jadi selalu baru' adalah obat penenang terbaik buat buyer.", warning: "Jangan bohong. Kalau barang lu emang mau deket expired, kasih tau jujur."},
+  {id:79, cat:"Situasi Kritis", title:"Kurir Instan Gak Dapet Driver", aliases:["driver belum dapat","kurir instan"], buyerChat:"Kak kok dari tadi kurir instannya belum dapet-dapet driver ya?", tones:{aman:"Sabar ya {pembeli} 🙏 Sistem di aplikasinya lagi susah nyari driver ke arah sana.", pro:"Aduh iya {pembeli} maaf ya 🙏 Ini {barang}-nya udah siap di depan dari tadi, cuma dari sistem aplikasinya lagi susah nyari driver kak.", vn: {tempo:"Ikut kesal.", nada:"Satu nasib dengan pembeli.", tekanan:"dari aplikasinya lagi error", teks:"Aduh iya {pembeli}, maaf banget ya. Ini {barang}-nya padahal udah di-packing rapi dari tadi. Cuma emang sistem aplikasinya lagi susah banget nyantol nyari drivernya kak. Nanti kalau udah dapet driver langsung aku kabarin ya."}}, fu:"{pembeli} alhamdulillah barusan udah dapet drivernya ya, mohon ditunggu.", wrong:"Tunggu aja kak emang gitu.", psych:"Bilang kalau barangnya UDAH SIAP dan lu IKUT MENGHUKUM sistem aplikasi yang lambat.", warning: null},
+  {id:80, cat:"Retensi", title:"Komplain Warna Agak Beda", aliases:["beda warna","agak gelap","gak sama difoto"], buyerChat:"Kak {barang} yang warna {warna} kok aslinya lebih gelap sih dari foto?", tones:{aman:"Halo {pembeli}, iya kak maaf ya itu efek pencahayaan studio pas difoto 😊", pro:"Halo {pembeli} 🙏 Iya kak bener, soalnya foto di katalog itu kita pakai lighting studio yang terang banget. Jadi aslinya emang warna {warna} bakal turun 1 tone lebih gelap kak.", vn: {tempo:"Edukatif.", nada:"Menjelaskan teknis.", tekanan:"efek lighting studio", teks:"Halo {pembeli}, oh iya bener kak. Memang warna {warna} kalau difoto pakai lighting studio jatuhnya kelihatan lebih terang di layar HP. Aslinya memang lebih gelap sedikit kak. Tapi tetep cakep kan kak pas dipakai? Hehe."}}, fu:"{pembeli} kalau misalkan tetep kurang sreg dan mau diretur juga gapapa kok.", wrong:"Kan udah dibilang di deskripsi ada perbedaan warna kak.", psych:"Memberikan penjelasan teknis akan bikin buyer memaklumi perbedaan tone warna.", warning: "Kalau warnanya emang beda jauh (pesen biru dikirim ungu), jangan pakai alasan ini."}
+);
+// ==========================================
+// TEMPLATE GELOMBANG TERAKHIR (81 - 120) 🔥
+// ==========================================
+TEMPLATES.push(
+  // --- FASE 6: LIVE SHOPPING & VIDEO ---
+  {id:81, cat:"Chat Harian", title:"Minta Harga Live Padahal Udah Offline", aliases:["harga live","diskon live","live udah kelar"], buyerChat:"Kak aku mau checkout {barang}, harganya disamain kayak pas Live tadi dong.", tones:{aman:"Maaf {pembeli} 🙏 Harga Live cuma berlaku pas kita lagi siaran aja kak.", pro:"Aduh {pembeli} sayang telat banget 😭 Harga Live otomatis ketutup sistem pas kita *end live*. Di-checkout harga normal dulu aja kak mumpung masih ada.", vn: {tempo:"Kecewa.", nada:"Ikut gregetan.", tekanan:"ketutup otomatis sama sistem", teks:"Aduh {pembeli} sayang banget telat 5 menit doang. Itu harga flash sale-nya otomatis ketutup sama sistem pas siarannya selesai kak. Mending {pembeli} checkout harga sekarang aja daripada kehabisan warna {warna}."}}, fu:"Nanti malem kita Live lagi kak, di-standby ya biar dapet harga murah 🚀", wrong:"Gak bisa kak livenya udah beres.", psych:"Arahkan mereka untuk beli sekarang dengan harga normal (takut kehabisan), atau wajib nonton live berikutnya.", warning: null},
+  {id:82, cat:"Chat Harian", title:"Spill Ulang Barang dari Live", aliases:["spill","etalase live","lihat yang di live"], buyerChat:"Kak spill lagi dong {barang} etalase nomor 5 yang tadi di Live.", tones:{aman:"Halo {pembeli} 😊 Ini ya kak foto detail {barang} untuk etalase nomor 5.", pro:"Halo {pembeli}! 👋 Kebetulan aku admin chat beda sama host livenya. Tapi ini aku kirimin real pict {barang} etalase 5 ya kak.", vn: {tempo:"Ceria.", nada:"Membantu antusias.", tekanan:"aku admin chat", teks:"Halo {pembeli}, kebetulan ini yang balas admin gudang nih kak beda sama host-nya. Tapi tenang, ini langsung aku kirimin video real pict {barang}-nya yang di etalase 5 tadi ya. Langsung di-checkout aja mumpung ready."}}, fu:"Gimana {pembeli}? Udah jelas kan detail {barang}-nya? 😊", wrong:"Tonton livenya lagi aja kak.", psych:"Buyer Live sering loncat ke chat karena ragu. Sambut mereka, berikan kepastian real pict.", warning: null},
+
+  // --- FASE 7: UPSELLING AGRESIF ---
+  {id:83, cat:"Closing", title:"Upsell Upgrade ke Seri Pro", aliases:["upgrade","seri pro","lebih bagus"], buyerChat:"Oke kak aku pesen {barang} yang varian biasa aja ya.", tones:{aman:"Siap {pembeli} 😊 Btw kita ada versi yang premium lho, beda dikit harganya tapi lebih tebal.", pro:"Siap {pembeli}. Eh tapi sekadar saran nih, tambah 20rb aja {pembeli} udah bisa dapet {barang} versi Pro yang bahannya jauh lebih awet lho.", vn: {tempo:"Santai.", nada:"Saran nasehat.", tekanan:"nanggung banget kak", teks:"Siap {pembeli}. Cuma sekadar ngasih saran aja nih kak, itu nanggung banget lho. Kakak nambah dikit aja udah dapet {barang} versi yang pro sekalian awet bertahun-tahun kak. Mau aku ganti pesanannya?"}}, fu:"{pembeli} jadinya mau tetep varian biasa atau mau aku upgrade-in ke versi Pro nih?", wrong:"Oke kak makasih.", psych:"Saat buyer udah 'Say Yes' ke barang murah, itu saat paling gampang nawarin barang mahal (Upsell) dengan dalih 'Nanggung'.", warning: null},
+  {id:84, cat:"Closing", title:"Flash Sale Dadakan via Chat", aliases:["flash sale dadakan","diskon kilat"], buyerChat:"Bagus sih kak, nanti malem deh aku pikir-pikir dulu.", tones:{aman:"Boleh {pembeli} 😊 Kalau butuh info lagi chat aja ya.", pro:"Boleh {pembeli} 😊 Tapi khusus buat {pembeli} aku ada voucher diskon nih, cuma bisa dipakai dalam 15 menit ke depan ya kak 😱", vn: {tempo:"Berbisik.", nada:"Penawaran rahasia.", tekanan:"cuma valid 15 menit", teks:"Boleh banget {pembeli}. Cuma gini kak, kebetulan aku lagi pegang satu voucher khusus dari toko. Kalau {pembeli} mau checkout {barang}-nya sekarang, aku kasih potongan langsung deh. Tapi cuma valid 15 menit ke depan ya kak."}}, fu:"{pembeli} vouchernya sisa 5 menit lagi ya sebelum otomatis hangus di sistem.", wrong:"Oke kak gapapa dipikir dulu.", psych:"Taktik FOMO ekstrem. Buyer yang 'mikir dulu' seringkali cuma kurang dorongan diskon dadakan berbatas waktu super ketat.", warning: "Hanya pakai ini ke buyer yang keranjang transaksinya lumayan besar."},
+
+  // --- FASE 8: KOMPETITOR & DROPSHIP KETAHUAN ---
+  {id:85, cat:"Situasi Kritis", title:"Tanya 'Ini dropship ya kak?'", aliases:["dropship","makelar","tangan pertama"], buyerChat:"Kak jujur deh, kakak dropship dari toko lain ya? Kok resinya beda kota.", tones:{aman:"Halo {pembeli}, kita pengiriman dari gudang pusat kita di kota tersebut ya kak 😊", pro:"Halo {pembeli} 🙏 Kita bukan dropship kok. Kita emang punya beberapa titik gudang mitra pengiriman, kebetulan {barang} warna {warna} ada di gudang cabang kita kota itu.", vn: {tempo:"Elegan.", nada:"Meyakinkan.", tekanan:"gudang mitra", teks:"Halo {pembeli}, selamat siang. Enggak kok kak kita bukan dropship abal-abal. Kita emang punya kerja sama sama gudang mitra di beberapa kota buat naruh barang. Nah kebetulan fisik {barang}-nya ada di sana, makanya resinya dari sana."}}, fu:"{pembeli} gak usah khawatir ya, garansi retur/rusak tetep full dari {toko} kok.", wrong:"Iya kak saya dropship.", psych:"Jelaskan pakai istilah 'Gudang Mitra/Cabang' agar toko lu terlihat lebih profesional dan besar.", warning: "Kalau lu jujur bilang dropship, 90% buyer akan nyari supplier tangan pertamanya."},
+  {id:86, cat:"Situasi Kritis", title:"Kompetitor Nitip Link di Komen", aliases:["kompetitor","toko sebelah","nitip link"], buyerChat:"(Ada yang komen di postingan: 'Di toko gue lebih murah cuma 20rb')", tones:{aman:"(Hapus komentar atau biarkan tanpa dibalas)", pro:"Halo kak 😊 Beda harga beda kualitas pastinya. Di {toko} kita garansi uang kembali 100%. Sukses terus ya buat tokonya! 🙌", vn: {tempo:"(Balasan Teks Publik)", nada:"(Elegan)", tekanan:"ada harga ada kualitas", teks:"Halo kak, terima kasih sudah mampir. Ada harga ada kualitas ya kak 😊 Kami di {toko} fokus pada bahan premium dan jaminan garansi 100% anti-zonk untuk pembeli. Semoga jualan tokonya laris manis juga ya kak! 🙏"}}, fu:"(JANGAN FOLLOW UP KOMPETITOR)", wrong:"Woy jangan spam di lapak orang dong!", psych:"Balas dengan pujian maut (Kill them with kindness) agar buyer asli sadar kualitas lu lebih elit.", warning: "Lebih baik di-hide/hapus kalau platform mendukung."},
+
+  // --- FASE 9: KASUS TEKNIS & PABRIK ---
+  {id:87, cat:"Situasi Kritis", title:"Ganti Packaging dari Pabrik", aliases:["kemasan beda","palsu","botolnya beda"], buyerChat:"Kak {barang}-nya kok beda bungkusnya sama yang aku beli bulan lalu? Palsu ya?!", tones:{aman:"Halo {pembeli} 🙏 Itu bukan palsu kak, emang dari pabriknya baru aja ganti desain kemasan baru.", pro:"Halo {pembeli} tenang dulu ya 🙏 {barang}-nya 100% Ori kok. Emang per bulan ini pabrik pusatnya ngeluarin *New Packaging*. Isinya dijamin persis sama kak.", vn: {tempo:"Edukasi.", nada:"Menenangkan kepanikan.", tekanan:"new packaging", teks:"Halo {pembeli}, tenang kak jangan panik. Itu 100% original kok. Emang per bulan ini tuh pabriknya ganti packaging baru kak biar gak gampang dipalsuin. Tapi untuk isinya 100% formula yang sama kok kak, dijamin aman."}}, fu:"{pembeli} kalau masih ragu, bisa cek langsung ke pengumuman pusatnya ya kak.", wrong:"Bukan palsu kak emang gitu sekarang.", psych:"Beri penjelasan teknis (New Packaging) biar mereka merasa teredukasi.", warning: null},
+  {id:88, cat:"Chat Harian", title:"Nota Minta Ditulis Lebih Murah", aliases:["nota dimurahin","istri","pajak"], buyerChat:"Kak di nota {barang}-nya tolong tulis harganya 50rb aja ya biar gak diomelin istri 😂", tones:{aman:"Siap {pembeli} 😂 Nanti aku tulis notanya 50rb ya kak.", pro:"Wahahaha siap {pembeli} aman banget 🤫 Nanti nota aslinya gak aku masukin, aku buatin nota tulis tangan harganya 50rb biar rumah tangganya aman kak.", vn: {tempo:"Bercanda.", nada:"Partner in crime.", tekanan:"biar rumah tangga aman", teks:"Wahahaha aduh {pembeli} ada-ada aja nih. Siap komandan aman! Nanti nota aslinya aku buang aja, aku bikinin nota tulis tangan yang harganya 50 ribu biar rumah tangganya tetep aman dan tentram ya kak."}}, fu:"{pembeli} {barang}-nya udah diproses ya, nota rahasianya udah masuk 🤫", wrong:"Gak bisa kak harus sesuai invoice.", psych:"Menjadi sekutu (partner in crime) dalam hal-hal lucu seperti ini akan bikin pembeli ketagihan belanja.", warning: "Jangan acc hal ini kalau untuk menipu instansi resmi/pajak."},
+  {id:89, cat:"Chat Harian", title:"Tanya Grosir Partai Besar (>100 pcs)", aliases:["grosir besar","partai","100 pcs"], buyerChat:"Kak kalau aku ambil {barang} 200 pcs dapet harga berapa? Buat seragaman.", tones:{aman:"Halo {pembeli}, untuk grosir ratusan pcs bisa dapet harga spesial ya 😊", pro:"Wah siap banget {pembeli}! 🤝 Untuk partai besar, {toko} kasih harga pabrik paling bawah deh. Mau kita obrolin via telepon biar lebih enak kak?", vn: {tempo:"Profesional.", nada:"B2B.", tekanan:"harga pabrik paling mentok", teks:"Halo selamat siang {pembeli}, wah terima kasih banyak kepercayaannya. Untuk pengambilan partai besar ratusan pcs, pasti kita kasih harga pabrik paling mentok bawah deh pokoknya. Ini mau diobrolin via telepon atau WA khusus grosir aja kak?"}}, fu:"{pembeli} ini nomor WA khusus admin grosir kita ya: [Nomor WA]", wrong:"Harganya jadi [Harga] kak.", psych:"Transaksi partai besar butuh penanganan High-Touch (telepon). Jangan tangani order 100 pcs dengan gaya chat eceran.", warning: "Pastikan DP dulu sebelum memproduksi barang seragaman ratusan pcs."},
+
+  // --- FASE 10: SITUASI GEREGETAN ---
+  {id:90, cat:"Situasi Kritis", title:"Paket Rusak Tapi Buyer Gak Mau Retur", aliases:["males retur","rusak tapi ogah","kompensasi"], buyerChat:"Kak {barang}-nya ada lecetnya nih! Aku males retur ribet ke kurirnya.", tones:{aman:"Maaf ya {pembeli} 🙏 Kalau males retur, mau kita kasih kompensasi voucher aja kak?", pro:"Aduh {pembeli} paham kak emang ribet kalau retur. Gini aja kak, {barang}-nya buat kakak aja, terus aku kasih kompensasi refund uang sebagian ke rekening kakak, gimana?", vn: {tempo:"Solutif.", nada:"Win-Win.", tekanan:"kompensasi refund uang sebagian", teks:"Halo {pembeli}, iya kak aku paham kok emang kadang repot kalau harus ngedrop lagi ke ekspedisi. Gini aja kak sebagai win-win solution, {barang}-nya disimpen kakak aja gapapa, tapi nanti aku transferin refund uang sebagian buat kompensasi lecetnya ya kak?"}}, fu:"{pembeli} mau ditransfer kompensasinya ke rekening apa kak?", wrong:"Kalau gak diretur gak bisa diganti kak.", psych:"Daripada lu dapet bintang 1, lebih baik 'Suap' mereka dengan uang kompensasi (Partial Refund) biar masalah selesai.", warning: null},
+  {id:91, cat:"Closing", title:"Spam P P P Tapi Pas Dibalas Ngilang", aliases:["spam p","ping","ilang"], buyerChat:"P\\nP\\nP\\n(Admin membalas, tapi buyer cuma nge-read)", tones:{aman:"Halo {pembeli}, tadi ada yang mau ditanyain soal {barang}?", pro:"Halo {pembeli} 😊 Maaf tadi antrean chat lagi penuh. Kakak butuh {barang} yang ukuran {ukuran} atau mau cari warna lain nih?", vn: {tempo:"Ramah.", nada:"Langsung ke inti.", tekanan:"mau cari warna apa", teks:"Halo {pembeli}, maaf banget ya tadi agak slow respon soalnya lagi ngurusin kiriman di belakang. Gimana kak, kakak ada yang lagi dicari atau kebetulan lagi butuh {barang} warna {warna}? Sini aku bantu cekin ke gudang kak."}}, fu:"{pembeli} kalau butuh bantuan jangan sungkan ketik aja di sini ya 🙌", wrong:"Iya kak ada apa spam p?", psych:"Tarik lagi fokus mereka dengan langsung nembak nanya mau barang apa.", warning: null},
+  {id:92, cat:"Closing", title:"Buyer Minta Jaminan 1000% (Super Ragu)", aliases:["jaminan","beneran aman","takut rusak"], buyerChat:"Kak janji ya {barang}-nya dipacking super aman? Aku takut banget pecah.", tones:{aman:"Aman {pembeli} 😊 Nanti kita kasih bubble wrap tebal.", pro:"Aman 1000% {pembeli} 🛡️ {barang}-nya bakal kita pakaiin dus keras, bubble wrap 3 lapis. Kalau pecah juga, aku ganti baru kak. Janji.", vn: {tempo:"Meyakinkan.", nada:"Bikin tenang.", tekanan:"kalau pecah aku ganti baru", teks:"Halo {pembeli}, wajar banget kak kalau takut pecah. Tapi tenang aja, nanti aku tambahin bubble wrapnya 3 lapis plus stiker fragile merah di luar. Kalau amit-amit masih pecah juga, kakak chat aku aja, langsung aku ganti baru. Aman 1000% kak."}}, fu:"{pembeli} paket super amannya udah jalan ya, moga selamat sampai tujuan 🚀", wrong:"Aman kak kita udah biasa ngirim.", psych:"Sebutkan KOMPONEN keamanan lu (bubble 3 lapis, dus, stiker) biar otaknya bisa memvisualisasikan keamanannya.", warning: "Pastikan lu BENERAN packing seaman itu kalau udah janji."},
+  {id:93, cat:"Chat Harian", title:"Bisa Custom / Request Ukuran?", aliases:["custom","request","ukuran sendiri"], buyerChat:"Kak bisa gak {barang}-nya dibikin custom ukurannya agak gedean dikit?", tones:{aman:"Bisa {pembeli} 😊 Cuma karena ini custom, pengerjaannya nambah 2 hari ya kak.", pro:"Bisa banget {pembeli} 🛠️ Kita emang terima request custom. Cuma khusus custom, {pembeli} harus selesain pembayarannya dulu di awal ya, gak bisa COD.", vn: {tempo:"Profesional.", nada:"Memberi aturan.", tekanan:"gak bisa pakai COD", teks:"Halo {pembeli}, oh minta di-custom ya? Bisa kok kak tenang aja. Cuma karena ini dibikin khusus, nanti sistemnya gak bisa pakai COD ya kak. Terus pengerjaannya nambah sekitar 2 harian kak. Kalau setuju, langsung aku buatin notanya ya."}}, fu:"Gimana {pembeli}? Mau lanjut dibuatin {barang} custom-nya?", wrong:"Gak bisa kak sesuai katalog aja.", psych:"Barang custom itu resiko tinggi. WAJIB tolak COD untuk barang custom.", warning: "Jangan pernah acc COD untuk pesanan bordir nama/custom."},
+  {id:94, cat:"Situasi Kritis", title:"Review Bintang 3 Karena Lecet Dikit", aliases:["bintang 3","lecet dikit","kecewa dikit"], buyerChat:"(Review Bintang 3: 'Barang lumayan tapi ada lecet dikit di ujungnya')", tones:{aman:"Halo kak, maaf ya ada lecetnya 🙏 Nanti aku DM vouchernya buat kompensasi.", pro:"Halo {pembeli} 🙏 Maaf banget ya ada lecet sedikit pas di kurir. Cek DM ya kak, aku kirimin voucher diskon khusus sebagai tanda permintaan maaf {toko}.", vn: {tempo:"(Balasan Teks)", nada:"Peduli.", tekanan:"kami kirimkan voucher", teks:"Halo kak, terima kasih ulasannya. Mohon maaf sekali ya kak jika ada lecet kemungkinan tergesek saat di ekspedisi. Sebagai tanggung jawab {toko}, kami sudah mengirimkan voucher diskon spesial ke chat kakak. Jika berkenan mohon direvisi bintangnya ya kak 🙏"}}, fu:"{pembeli} vouchernya udah masuk ya di chat, moga berkenan nerimanya 😊", wrong:"Makasih ulasannya kak.", psych:"Sogok mereka pakai voucher via chat agar mereka mau mengubah ke bintang 5.", warning: null},
+  {id:95, cat:"Situasi Kritis", title:"Kurir Marah Karena Buyer Gak Angkat Telepon", aliases:["kurir marah","gak diangkat","telepon kurir"], buyerChat:"(Kurir lapor: 'Ini customernya ditelepon gak diangkat, saya retur aja ya!')", tones:{aman:"Halo {pembeli}, tadi pak kurirnya nelepon mau nganter {barang} tapi gak diangkat. Tolong dihubungi balik ya kak 🙏", pro:"Halo {pembeli} 🙏 Maaf ganggu, ini pak kurirnya tadi mau nganter paket tapi nomer kakak susah dihubungi. Diangkat dulu ya kak teleponnya, kasihan kurirnya.", vn: {tempo:"Buru-buru.", nada:"Peringatan lembut.", tekanan:"takut paketnya diretur", teks:"Halo {pembeli}, siang kak. Kak ini dari pihak kurir ngelapor katanya teleponnya gak diangkat-angkat ya? Minta tolong banget di-standby ya kak HP-nya, kasihan kurirnya bingung nyari rumah kakak, takutnya nanti malah paketnya diretur balik ke kita."}}, fu:"{pembeli} udah berhasil janjian sama kurirnya belum kak?", wrong:"Angkat dong kak teleponnya!", psych:"Gunakan kartu 'Kasihan Kurir' dan 'Ancaman Retur' agar pembeli merasa bersalah dan buru-buru ngecek HP.", warning: null},
+  {id:96, cat:"Situasi Kritis", title:"Pabrik Tutup/Discontinue Ditanya Terus", aliases:["kapan restock","discontinue","gak diproduksi"], buyerChat:"Kak {barang} yang varian lama ini kapan restock lagi sih?", tones:{aman:"Maaf {pembeli} 🙏 Untuk tipe itu udah gak diproduksi lagi sama pabriknya. Cek tipe baru kita yuk.", pro:"Aduh {pembeli} maaf banget ya 🙏 Itu {barang}-nya udah discontinue dari pabrik pusatnya kak. Tapi kita ada tipe penggantinya yang lebih bagus lho.", vn: {tempo:"Menyesal.", nada:"Info valid.", tekanan:"udah beneran stop produksi", teks:"Halo {pembeli}, aduh maaf banget bikin nunggu. Info valid dari pabriknya, untuk varian yang itu udah beneran stop produksi kak. Tapi sebagai gantinya, pabrik ngeluarin tipe terbaru yang jauh lebih awet kak. Mau aku kirimin fotonya?"}}, fu:"Ini {pembeli} foto produk barunya, mirip banget kok sama yang lama.", wrong:"Kosong kak.", psych:"Beri 'Closure' (Kepastian) bahwa barang itu musnah, lalu segera pindahkan hasrat beli mereka ke model baru.", warning: null},
+  {id:97, cat:"Closing", title:"Nawar Ongkir Karena Sesama Kota (Deket)", aliases:["deket","sesama kota","potong ongkir"], buyerChat:"Kak kan kita sesama kota deket banget, masak ongkirnya tetep segitu. Kurangin lah.", tones:{aman:"Halo {pembeli}, kalau ongkir itu otomatis dari aplikasi kak, kita gak bisa ngubah 🙏", pro:"Hahaha iya juga ya {pembeli} 😂 Tapi sayangnya ongkir itu full dipegang sama sistem aplikasi dan masuknya ke kurir kak. Pakai voucher gratis ongkir aja kak.", vn: {tempo:"Tertawa.", nada:"Menjelaskan alur.", tekanan:"masuknya ke pihak ekspedisi", teks:"Hahaha iya juga sih {pembeli} padahal deket ya. Tapi masalahnya kalau ongkir itu otomatis dihitung sama sistem aplikasi kak, uangnya full masuk ke pihak ekspedisi, kita admin toko gak bisa ngubah. Paling {pembeli} pake aja voucher gratis ongkir di aplikasi ya."}}, fu:"{pembeli} vouchernya udah bisa nempel belum di keranjang?", wrong:"Ongkir bukan urusan kita kak.", psych:"Edukasi mereka bahwa uang ongkir itu BUKAN uang lu, jadi lu gak bisa motong harganya.", warning: null},
+  {id:98, cat:"Chat Harian", title:"Warna Beda Karena Restock Batch Baru", aliases:["beda warna","gelap","terang","batch baru"], buyerChat:"Kak kok {barang} warna {warna} yang aku beli sekarang agak beda tone-nya sama bulan lalu?", tones:{aman:"Halo {pembeli}, iya kak itu karena beda batch produksi dari pabriknya ya 🙏", pro:"Halo {pembeli} 🙏 Iya bener kak, soalnya barang yang sekarang itu celupan pabrik batch baru, jadi kadang ada turun/naik 1 tone kak.", vn: {tempo:"Edukatif.", nada:"Ahli tekstil.", tekanan:"beda gulungan kain", teks:"Halo {pembeli}, oh iya bener kak. Memang kalau restock baru, pencelupan warna dari pabriknya itu suka beda 1 tone lebih terang atau gelap dari batch kemaren kak. Karena beda gulungan bahan. Tapi kualitasnya tetep sama 100% kok kak."}}, fu:"Tetep cakep kan {pembeli} pas dipakai? Hehe 😊", wrong:"Perasaan sama aja deh kak warnanya.", psych:"Berikan edukasi 'Beda Batch Pabrik' agar mereka ngerti bahwa itu hal wajar di industri.", warning: null},
+  {id:99, cat:"Closing", title:"Keranjang Ditinggal Padahal Sisa 1 (Last Call)", aliases:["sisa 1","last call","habis"], buyerChat:"(Pembeli memasukkan ke keranjang tapi stok fisik sisa 1)", tones:{aman:"Halo {pembeli}, pesanan {barang}-nya masih ada di keranjang ya. Info aja stoknya sisa 1 lho kak 😱", pro:"🚨 WARNING {pembeli}! {barang} warna {warna} yang di keranjang kakak beneran sisa 1 pcs terakhir di gudang. Kalau gak di-checkout sekarang takut diserobot orang kak.", vn: {tempo:"Panik.", nada:"Peringatan level tinggi.", tekanan:"beneran sisa satu-satunya", teks:"Halo {pembeli}! Aduh kak buruan di-checkout ya, itu {barang} warna {warna} yang di keranjang kakak beneran sisa satu-satunya di rak gudang kita. Ini di aplikasi ada 3 orang yang masukin ke keranjang juga lho. Siapa cepat dia dapat ya kak, buruan amankan!"}}, fu:"{pembeli} kalau udah dicheckout kabarin ya biar aku langsung tarik barangnya.", wrong:"Ayo bayar kak mumpung masih ada.", psych:"Trigger rasa kompetisi dengan bilang 'Ada orang lain yang masukin ke keranjang juga'.", warning: "Gunakan ini HANYA jika stok beneran sisa 1 atau 2."},
+  {id:100, cat:"Retensi", title:"Ucapan Terima Kasih Spesial (Anniversary)", aliases:["anniversary","terima kasih loyal","setahun"], buyerChat:"(Broadcast Spesial Pelanggan Loyal)", tones:{aman:"Halo {pembeli} 🥰 Makasih banyak ya udah setia belanja {barang} di {toko} selama ini.", pro:"Halo {pembeli} 🥺 Cuma mau bilang makasih banyak. Berkat pelanggan setia kayak {pembeli}, toko kecil kita bisa terus bertahan. Sehat selalu ya kak 🙏", vn: {tempo:"Sangat tulus.", nada:"Emosional.", tekanan:"toko kecil kita bisa bertahan", teks:"Halo {pembeli}, selamat siang kak. Chat ini murni bukan buat jualan kok. Aku dari admin {toko} cuma pengen bilang makasihhhh banyak ya kak atas kepercayaannya selama ini. Berkat langganan kayak {pembeli}, toko kecil kita ini bisa terus buka. Semoga {pembeli} sehat selalu ya kak."}}, fu:"(JANGAN ADA FOLLOW UP JUALAN DI SINI)", wrong:"Makasih udah belanja, ayo order lagi.", psych:"Toko yang MURNI berterima kasih tanpa embel-embel jualan akan memenangkan hati pembeli seumur hidup.", warning: "JANGAN SELIPKAN PROMO ATAU LINK JUALAN APAPUN DI CHAT INI."},
+
+  // --- FASE 11: TEKNIS APLIKASI & VOUCHER ---
+  {id:101, cat:"Chat Harian", title:"Voucher Gagal Diklaim / Error", aliases:["voucher error","gagal klaim","gak bisa dipakai"], buyerChat:"Kak kok vouchernya gak bisa dipakai pas mau bayar ya?", tones:{aman:"Coba di-refresh aplikasinya dulu ya {pembeli} 😊", pro:"Aduh sistem aplikasinya emang suka ngelag gitu {pembeli} 😭 Coba {barang}-nya dikeluarin dulu dari keranjang, terus masukin lagi dan klaim vouchernya ulang kak.", vn: {tempo:"Menenangkan.", nada:"Tech Support.", tekanan:"aplikasinya emang lagi ngelag", teks:"Halo {pembeli}, iya itu emang dari aplikasinya lagi ngelag banget kak servernya. Triknya gini kak: {pembeli} hapus dulu {barang}-nya dari keranjang, terus aplikasinya di-close dulu. Baru buka lagi, masukin ke keranjang lagi, baru tempel vouchernya."}}, fu:"Gimana {pembeli}? Udah bisa nempel kan vouchernya sekarang?", wrong:"Itu urusan aplikasi kak.", psych:"Bimbing mereka pelan-pelan (hapus keranjang -> masukin lagi) biar vouchernya jalan.", warning: null},
+  {id:102, cat:"Chat Harian", title:"Resi Gagal Cetak di Toko (Sistem Error)", aliases:["resi gagal","printer rusak","sistem down"], buyerChat:"Kak kok {barang}-nya belum dikirim-kirim sih dari kemaren?", tones:{aman:"Maaf ya {pembeli} 🙏 Sistem di gudang kita lagi error gak bisa cetak resi. Hari ini langsung kita kirim kok.", pro:"Aduh {pembeli} maaf beribu maaf ya 🙏 Dari kemaren sistem cetak resi ekspedisinya lagi down se-Indonesia, jadi {barang}-nya numpuk gak bisa dikirim. Tapi ini udah normal lagi kok 🚀", vn: {tempo:"Menyesal.", nada:"Edukasi teknis.", tekanan:"sistem ekspedisinya down", teks:"Aduh {pembeli} maaf banget bikin nunggu lama. Ini sebenernya {barang}-nya udah siap, cuma dari kemaren sistem ekspedisinya itu lagi down total se-Indonesia kak, jadi kita gak bisa nge-print resinya. Tapi alhamdulillah siang ini udah normal lagi kak."}}, fu:"{pembeli} paketnya udah berhasil dicetak dan dibawa kurir ya 🙏", wrong:"Sabar kak masih diproses.", psych:"Berikan alasan 'sistem down' agar keterlambatan lu terasa seperti Force Majeure, bukan karena malas.", warning: "Jangan pakai alasan ini terlalu sering."},
+  {id:103, cat:"Closing", title:"Batalin Pesanan Karena Kurir Lama", aliases:["kurir lama","batalin aja","cancel kurir"], buyerChat:"Kak batalin aja deh pesenanku, ternyata pakai kurir itu lamanya minta ampun.", tones:{aman:"Waduh {pembeli} paketnya udah dibungkus kak 🙏 Ditahan dulu ya.", pro:"Aduh {pembeli} sayang banget kalau dibatalin 😭 {barang}-nya ini udah aku packing rapi lho. Kurir itu emang kadang lama, tapi aku janji bakal bantu nge-push terus tiap hari dari sistemku kak.", vn: {tempo:"Panik sedikit.", nada:"Membujuk.", tekanan:"aku bantu push tiap hari", teks:"Aduh {pembeli} jangan dibatalin dong kak sayang banget. Ini {barang}-nya udah aku bungkusin rapi banget lho. Iya emang kurir itu kalau reguler suka ngaret, tapi kakak tenang aja, aku bakal nge-push terus ke agen pusatnya tiap hari biar paket kakak diprioritasin jalan."}}, fu:"{pembeli} kurirnya udah mulai gerak kok di sistem, ditunggu ya paketnya.", wrong:"Udah gak bisa dicancel.", psych:"Yakinkan mereka bahwa KALI INI lu akan bertindak sebagai bodyguard yang mantau paketan mereka tiap hari.", warning: null},
+
+  // --- FASE 12: SKENARIO TOXIC LANJUTAN ---
+  {id:104, cat:"Situasi Kritis", title:"Ongkir Retur Jadi Masalah", aliases:["ongkir retur","siapa yang bayar","gamau rugi ongkir"], buyerChat:"Aku mau retur, tapi masa aku yang bayar ongkir kembalinya?! Kan toko lu yang salah!", tones:{aman:"Halo {pembeli}, karena ini kesalahan toko kita, ongkir retur kita yang bayar ya kak 🙏", pro:"Halo {pembeli} 🙏 Betul kak, karena ini murni kelalaian dari tim {toko}, kakak gak usah keluar uang sepeserpun. Ongkir baliknya nanti aku transfer ke rekening kakak.", vn: {tempo:"Tegas.", nada:"Bertanggung jawab.", tekanan:"aku transfer langsung ongkirnya", teks:"Halo {pembeli}, kakak tenang aja. Karena emang ini murni kesalahan dari gudang kita, kakak gak usah bayar ongkir returnya sama sekali. Kakak drop aja ke kurir, nanti struk ongkirnya fotoin ke aku, detik itu juga uang ongkirnya aku transfer ke rekening {pembeli}."}}, fu:"{pembeli} bukti resi returnya difotoin ya biar ongkirnya aku ganti.", wrong:"Sesuai aturan ongkir ditanggung pembeli kak.", psych:"Kalau lu yang salah kirim, jangan PERNAH suruh buyer nanggung ongkir retur.", warning: "Kalau buyer mau retur karena 'Gak Suka' (bukan lu yang salah), TEGASKAN ongkir retur ditanggung buyer."},
+  {id:105, cat:"Situasi Kritis", title:"Paket Nyasar ke Alamat Orang Lain (Lanjutan)", aliases:["nyasar ke orang","salah rumah"], buyerChat:"Kak di resi tulisannya 'Paket Diterima', padahal aku lagi di luar kota dan rumah kosong! Siapa yang nerima?!", tones:{aman:"Aduh {pembeli} sebentar ya 🙏 Aku bantu cekin ke pihak kurirnya sekarang.", pro:"Astaga {pembeli} jangan panik dulu ya 🙏 Biasanya paketnya dititipin ke tetangga atau satpam. Sini aku hubungi kurir yang nganternya dulu buat nanya.", vn: {tempo:"Fokus.", nada:"Investigator.", tekanan:"aku nelepon kurirnya langsung", teks:"Halo {pembeli}, waduh kok bisa gitu. Oke {pembeli} tenang dulu ya jangan panik. Biasanya kasus kayak gini tuh kurirnya nitipin ke tetangga sebelah atau pos satpam. Ini sekarang juga aku nelepon agen kurirnya buat minta nomor WA kurir yang nganternya ya kak."}}, fu:"{pembeli} kata kurirnya paketnya dititipin di rumah warna hijau sebelah kakak ya.", wrong:"Coba tanya orang rumah kak.", psych:"Tenangkan mereka dengan probabilitas paling logis (dititip tetangga), lalu lu yang bergerak nelepon kurir.", warning: "Jangan suruh buyer nyari-nyari kurirnya sendiri."},
+  {id:106, cat:"Situasi Kritis", title:"Force Majeure (Kecelakaan/Bencana Ekspedisi)", aliases:["banjir","truk kecelakaan","force majeure"], buyerChat:"Kak paketku kok stuck di gudang transit berhari-hari ya?", tones:{aman:"Halo {pembeli} 🙏 Baru dapet info, gudang kurirnya kebanjiran kak. Kita ganti baru aja ya barangnya.", pro:"Halo {pembeli} 😭 Maaf banget bawa kabar buruk. Ternyata truk kurir yang bawa paket {barang} kakak kena musibah di jalan. Tapi tenang kak, hari ini langsung kita kirim barang ganti yang baru 100%.", vn: {tempo:"Serius, prihatin.", nada:"Ngasih jaminan toko.", tekanan:"langsung kita kirim barang baru", teks:"Halo {pembeli}, sebelumnya aku minta maaf banget ya kak bawa kabar kurang enak. Tadi agen ngabarin kalau truk ekspedisi yang bawa paket kakak itu kena musibah di jalan. Tapi {pembeli} gak usah mikirin asuransinya, hari ini juga langsung kita kirim {barang} yang baru ya kak."}}, fu:"{pembeli} paket {barang} barunya udah jalan ya kak, doain yang ini lancar.", wrong:"Truknya kecelakaan kak ditunggu aja asuransinya.", psych:"Musibah di luar kendali bukan salah lu, tapi lu yang harus jadi pelindung buyer. Ambil alih klaim asuransi, dan segera kirim barang baru.", warning: "Pastikan info kecelakaan/bencana dari ekspedisi itu VALID 100%."},
+
+  // --- FASE 14: NEGOSIASI ANEH & LAIN-LAIN ---
+  {id:107, cat:"Closing", title:"Nawar Bundling Tapi Mau Beli Ngecer", aliases:["nawar bundling","harga paketan","beli ecer"], buyerChat:"Kak itu kan harga 3 pcs 100rb. Aku beli 1 pcs aja tapi 33rb ya?", tones:{aman:"Maaf {pembeli} 🙏 Harga 33rb itu khusus buat yang beli paketan isi 3 kak.", pro:"Hahaha {pembeli} pinter banget ngitungnya 😂 Tapi maaf kak, harga diskon itu cuma bisa diaktifin kalau sistemnya ngebaca pembelian 3 pcs sekaligus (bundling). Kalau ngecer 1 pcs harganya tetep normal.", vn: {tempo:"Tertawa.", nada:"Menolak karena sistem.", tekanan:"cuma kebaca kalau beli paketan", teks:"Hahaha aduh {pembeli} pinter banget sih matematikanya. Pengen banget aku kasih harga segitu, tapi di sistem kasir kita diskonnya cuma bakal aktif kalau {pembeli} nge-scan 3 barang sekaligus kak. Mending ajak temennya beli sekalian aja kak biar dapet harga bundling."}}, fu:"{pembeli} jadinya mau ambil ecer atau mau sikat bundling sekalian?", wrong:"Gak bisa kak.", psych:"Tolak dengan menyalahkan 'Sistem Kasir/Aplikasi' agar lu gak terlihat kaku, lalu dorong mereka ajak temen.", warning: null},
+  {id:108, cat:"Chat Harian", title:"Nanya Cara Pakai yang Super Detail (Gaptek)", aliases:["cara pakai","gaptek","gak ngerti"], buyerChat:"Kak ini {barang}-nya pas udah dinyalain terus diapain lagi? Aku gak ngerti deh.", tones:{aman:"Halo {pembeli} 😊 Itu tinggal ditekan tombol birunya aja kak sampai bunyi klik.", pro:"Halo {pembeli} 😊 Jangan bingung kak. Biar gampang, ini aku kirimin link video tutorial YouTube-nya aja ya kak biar kakak bisa ngikutin langkah-langkahnya.", vn: {tempo:"Sabar.", nada:"Guru yang mengajar.", tekanan:"aku kirimin video tutorialnya", teks:"Halo {pembeli}, aman kak gak usah bingung. Itu step pertamanya {pembeli} tekan dulu tombol yang warna biru sampai bunyi klik. Terus biar kakak gak pusing, ini habis ini aku kirimin video tutorial cara pakenya ya kak, kakak tonton aja gampang banget kok."}}, fu:"{pembeli} udah bisa nyala kan {barang}-nya sekarang?", wrong:"Baca di buku panduannya aja kak udah lengkap.", psych:"Menyuruh orang gaptek baca buku panduan sama dengan membunuh mood mereka. Kirimkan video pendek.", warning: "Simpan 1 video tutorial andalan lu di HP/Notes biar gampang dikirim."},
+  {id:109, cat:"Retensi", title:"Minta Testimoni Video (Bukan Cuma Foto)", aliases:["minta video","review video","testi video"], buyerChat:"Makasih ya kak {barang}-nya nyampe dengan selamat.", tones:{aman:"Sama-sama {pembeli} 😊 Boleh minta ulasan videonya kak buat {toko}? 🙏", pro:"Alhamdulillah {pembeli} 😍 Oh iya kak, kalau lagi santai, boleh minta tolong review bentuk video pas {barang}-nya dipakai gak kak? Biar temen-temen yang lain makin percaya 🙏", vn: {tempo:"Gembira.", nada:"Memohon bantuan kecil.", tekanan:"review bentuk video", teks:"Alhamdulillah kalau {pembeli} puas sama layanannya. Kak, aku boleh minta tolong kecil gak? Kalau {pembeli} lagi nyantai, boleh tolong divideoin sedikit gak kak kondisi fisik {barang}-nya pas lagi dipakai? Soalnya testimoni video dari kakak ngebantu banget buat naikin trust pembeli lain ke toko kecil kita kak."}}, fu:"Wah videonya bagus banget {pembeli}, makasih banyak lho effortnya! 🥰", wrong:"Minta ulasan videonya ya kak wajib.", psych:"Gunakan ego pembeli ('biar orang lain makin percaya') agar mereka dengan bangga membuatkan video pendek.", warning: "Jangan memaksa. Hargai kalau mereka cuma ngasih foto."},
+  {id:110, cat:"Retensi", title:"Nawarin Program Reseller / Affiliate", aliases:["ajak reseller","affiliate","gabung mitra"], buyerChat:"(Broadcast khusus pembeli yang sudah order >3 kali)", tones:{aman:"Halo {pembeli} 😊 Karena kakak sering order, mau gabung jadi reseller kita gak? Dapet harga khusus lho.", pro:"Halo {pembeli} 🥰 Aku perhatiin kakak cocok banget jualan. Karena udah sering order {barang}, {pembeli} mau aku masukin ke grup khusus Reseller VIP gak? Nanti dapet harga pabrik lho.", vn: {tempo:"Antusias.", nada:"Membuka peluang bisnis.", tekanan:"masuk ke grup VIP Reseller", teks:"Halo {pembeli} selamat siang. Kak aku perhatiin kakak sering banget langganan order di kita. Gini kak, kebetulan kita lagi buka slot kemitraan nih. Daripada kakak cuma beli buat dipakai, mending kakak sekalian gabung jadi Reseller VIP kita aja. Nanti kakak dapet harga jauh lebih murah dan dapet bimbingan jualan juga."}}, fu:"{pembeli} kalau tertarik balas 'MAU' ya biar aku kirim link grupnya.", wrong:"Gabung reseller kita yuk kak murah.", psych:"Tawarkan hanya ke mereka yang sudah MERASAKAN KUALITAS produk lu. Mereka adalah agen promosi terbaik.", warning: "Pastikan lu udah punya sistem pricing/grup WA khusus sebelum nawarin ini."},
+  {id:111, cat:"Closing", title:"Buyer Udah Beli Padahal Mau Expired Batal", aliases:["mau batal otomatis","segera bayar","waktu habis"], buyerChat:"(Notifikasi dari sistem: Orderan akan otomatis dibatalkan dalam 2 jam)", tones:{aman:"Halo {pembeli}, pesanan {barang}-nya sisa 2 jam lagi otomatis batal di sistem ya kak.", pro:"🚨 {pembeli} sayang! Pesanan {barang}-nya sisa 2 jam lagi otomatis expired lho di sistem. Sayang banget vouchernya kalau sampai batal. Mau dilanjut bayar sekarang?", vn: {tempo:"Cepat, urgent.", nada:"Menyelamatkan orderan.", tekanan:"sebelum otomatis hangus", teks:"Halo {pembeli}, aduh kak buruan! Ini di sistemku muncul notif pesanan {barang} kakak sisa kurang dari 2 jam lagi bakal otomatis dicancel sama sistem. Sayang banget kak diskonnya kalau sampai hangus. Mumpung belum expired, langsung ditransfer sekarang aja ya kak."}}, fu:"{pembeli} mau dibantu ubah metode pembayarannya gak biar gampang?", wrong:"Segera transfer ya kak.", psych:"Tekankan kata 'Otomatis Batal' dan 'Sayang Vouchernya Hangus' agar mereka tergerak membereskan transaksinya.", warning: null},
+  {id:112, cat:"Chat Harian", title:"Buyer Nyalahin Admin Padahal Salah Baca", aliases:["salah baca","ngegas salah","kan aku pesen"], buyerChat:"WOY KOK DIKIRIM HITAM?! KAN AKU PESENNYA PUTIH!", tones:{aman:"Halo {pembeli} 🙏 Coba kakak cek lagi nota pesanannya ya, di situ tertulis warna hitam kak.", pro:"Halo {pembeli} 🙏 Maaf bikin kaget ya. Cuma izin konfirmasi kak, kalau di sistem kasir, invoice yang kakak klik pas checkout itu kebaca varian Hitam kak. Mungkin kemaren kakak kepencet ya? 😂", vn: {tempo:"Tertawa ramah.", nada:"Teman yang memberitahu kesalahan.", tekanan:"kakak kepencet varian hitam", teks:"Halo {pembeli}, waduh tenang dulu kak jangan panik hehe. Izin ngelurusin ya kak, ini barusan aku cek di komputer kasir, ternyata invoice resi yang kakak checkout kemarin itu emang milihnya yang warna Hitam kak. Kayaknya pas mau bayar kakak gak sengaja kepencet varian hitam deh. Coba {pembeli} cek lagi invoice di aplikasinya ya."}}, fu:"Gimana {pembeli}? Udah dicek belum invoice-nya? Hehe aman ya kak.", wrong:"Kakak yang salah order milih hitam.", psych:"Gunakan kata 'Mungkin kakak kepencet' untuk menyelamatkan muka mereka dari rasa malu.", warning: "Pastikan LU BENAR 100% dan punya bukti screenshot invoice sebelum membalas ini."},
+  {id:113, cat:"Closing", title:"Kemahalan Padahal Udah Diskon Gede", aliases:["tetep mahal","masih mahal","kurang murah"], buyerChat:"Masih mahal ah kak walaupun udah didiskon.", tones:{aman:"Iya {pembeli} 😊 Karena emang {barang} ini kualitasnya beda kak.", pro:"Iya {pembeli} kalau dibandingin barang standar emang kerasa lumayan. Cuma {barang} ini kan jahitannya dobel kak, ibaratnya beli mahal di awal tapi puas pakainya bertahun-tahun 🙌", vn: {tempo:"Tenang.", nada:"Consultative Selling.", tekanan:"puas bertahun-tahun", teks:"Halo {pembeli}, iya aku paham kok emang lumayan. Cuma gini kak, {barang} ini kan bukan barang sekali pakai buang. Jahitannya dobel, bahannya premium. Ibarat kata {pembeli} investasi nambah duit sedikit di awal, tapi pakainya bisa puas dan awet bertahun-tahun kak."}}, fu:"{pembeli} mau di-checkout sekarang mumpung diskonnya belum aku cabut?", wrong:"Udah paling murah kak ini.", psych:"Jangan perdebatkan 'Mahal/Murah'. Ubah cara pandang mereka: ini bukan 'Pengeluaran Mahal', tapi 'Investasi Awet Bertahun-tahun'.", warning: null},
+  {id:114, cat:"Retensi", title:"Edukasi Pemakaian (H+30 Setelah Beli)", aliases:["edukasi sebulan","gimana hasilnya","perawatan h+30"], buyerChat:"(Broadcast ke pembeli yang sudah 30 hari menerima barang)", tones:{aman:"Halo {pembeli} 😊 Gimana {barang}-nya setelah sebulan dipakai? Awet kan?", pro:"Halo {pembeli} 👋 Udah sebulan nih sejak {barang}-nya nemenin kakak. Cuma mau ngingetin kak, jangan lupa dilap/dirawat ya biar performanya tetep mantap terus! ✨", vn: {tempo:"Ramah.", nada:"Expert yang peduli.", tekanan:"jangan lupa dirawat", teks:"Halo {pembeli} selamat siang. Gak kerasa udah sebulan ya {barang}-nya dipakai. Ini aku dari {toko} cuma mau ngingetin tips perawatannya nih kak, jangan lupa sesekali dilap ya kak biar warnanya tetep awet dan gak kusam. Kalau {pembeli} mau nambah koleksi warnanya lagi, kebetulan kita lagi ada diskon nih, chat aja ya kak."}}, fu:"(JANGAN AGRESIF JUALAN DI SINI, MURNI EDUKASI SAJA)", wrong:"Ayo kak beli lagi barang kita.", psych:"Follow-up 30 hari menunjukkan bahwa lu peduli JANGKA PANJANG, bukan cuma peduli pas nerima duit aja.", warning: "Jangan kirim ini kalau lu tau pembeli tersebut pernah komplain/gak puas."},
+  {id:115, cat:"Closing", title:"Nawar Bundling Tapi Mau Beli Ecer", aliases:["nawar bundling","harga paketan","beli ecer"], buyerChat:"Kak itu kan harga 3 pcs 100rb. Aku beli 1 pcs aja tapi 33rb ya?", tones:{aman:"Maaf {pembeli} 🙏 Harga 33rb itu khusus buat yang beli paketan isi 3 kak.", pro:"Hahaha {pembeli} pinter banget ngitungnya 😂 Tapi maaf kak, harga diskon itu cuma bisa diaktifin kalau sistemnya ngebaca pembelian 3 pcs sekaligus (bundling). Kalau ngecer 1 pcs harganya tetep normal.", vn: {tempo:"Tertawa.", nada:"Menolak karena sistem.", tekanan:"cuma kebaca kalau beli paketan", teks:"Hahaha aduh {pembeli} pinter banget sih matematikanya. Pengen banget aku kasih harga segitu, tapi di sistem kasir kita diskonnya cuma bakal aktif kalau {pembeli} nge-scan 3 barang sekaligus kak. Mending ajak temennya beli sekalian aja kak biar dapet harga bundling."}}, fu:"{pembeli} jadinya mau ambil ecer atau mau sikat bundling sekalian?", wrong:"Gak bisa kak.", psych:"Tolak dengan menyalahkan 'Sistem Kasir/Aplikasi' agar lu gak terlihat kaku, lalu dorong mereka ajak temen.", warning: null},
+  {id:116, cat:"Situasi Kritis", title:"Paket Nyasar ke Alamat Orang Lain", aliases:["nyasar ke orang","salah rumah"], buyerChat:"Kak di resi tulisannya 'Paket Diterima', padahal aku lagi di luar kota dan rumah kosong! Siapa yang nerima?!", tones:{aman:"Aduh {pembeli} sebentar ya 🙏 Aku bantu cekin ke pihak kurirnya sekarang.", pro:"Astaga {pembeli} jangan panik dulu ya 🙏 Biasanya paketnya dititipin ke tetangga atau satpam. Sini aku hubungi kurir yang nganternya dulu buat nanya dititipin di mana.", vn: {tempo:"Fokus.", nada:"Investigator.", tekanan:"aku nelepon kurirnya langsung", teks:"Halo {pembeli}, waduh kok bisa gitu. Oke {pembeli} tenang dulu ya jangan panik. Biasanya kasus kayak gini tuh kurirnya nitipin ke tetangga sebelah atau pos satpam. Ini sekarang juga aku nelepon agen kurirnya buat minta nomor WA kurir yang nganternya ya kak, biar jelas dititipin di mana."}}, fu:"{pembeli} kata kurirnya paketnya dititipin di rumah warna hijau sebelah kakak ya.", wrong:"Coba tanya orang rumah kak.", psych:"Tenangkan mereka dengan probabilitas paling logis (dititip tetangga), lalu lu yang bergerak nelepon kurir.", warning: "Jangan suruh buyer nyari-nyari kurirnya sendiri."},
+  {id:117, cat:"Chat Harian", title:"Nanya Ketersediaan Warna Discontinue", aliases:["warna ini ada","kok di katalog gaada","warna lama"], buyerChat:"Kak {barang} yang warna Navy kok gak bisa diklik ya?", tones:{aman:"Halo {pembeli}, iya untuk warna itu udah habis dari pabriknya kak 😊", pro:"Halo {pembeli} 🙏 Wah kebetulan warna itu udah discontinue (gak diproduksi lagi). Tapi kita ada warna Denim kak, tone-nya mirip banget dan lagi best seller nih.", vn: {tempo:"Sopan.", nada:"Mengarahkan.", tekanan:"mirip banget sama navy", teks:"Halo {pembeli}, iya bener kak yang warna itu emang sengaja kita nonaktifin soalnya dari pabrik pusatnya udah stop produksi. Tapi jangan sedih kak, kita ada varian warna Denim nih. Warnanya gelap elegan mirip banget sama Navy. {pembeli} mau intip foto aslinya gak?"}}, fu:"{pembeli} warna Denim-nya juga sisa dikit lho, mau diamankan sekalian?", wrong:"Kosong kak warnanya.", psych:"Matinya satu varian bukan berarti batal closing. Jadikan itu jembatan untuk nawarin varian lain yang mirip.", warning: null},
+  {id:118, cat:"Situasi Kritis", title:"Review Bintang 3 Karena Lecet Dikit", aliases:["bintang 3","lecet dikit","kecewa dikit"], buyerChat:"(Review Bintang 3: 'Barang lumayan tapi ada lecet dikit di ujungnya')", tones:{aman:"Halo kak, maaf ya ada lecetnya 🙏 Nanti aku DM vouchernya buat kompensasi.", pro:"Halo {pembeli} 🙏 Maaf banget ya ada lecet sedikit pas di kurir. Cek DM ya kak, aku kirimin voucher diskon khusus buat kakak sebagai tanda permintaan maaf {toko}.", vn: {tempo:"(Balasan Teks)", nada:"Sangat peduli walau hanya bintang 3.", tekanan:"kami kirimkan voucher", teks:"Halo kak, terima kasih banyak ulasannya. Mohon maaf sekali ya kak jika ada lecet di bagian ujung kemungkinan tergesek saat di ekspedisi. Sebagai bentuk tanggung jawab {toko}, kami sudah mengirimkan voucher diskon spesial ke chat kakak. Jika berkenan mohon direvisi bintangnya ya kak 🙏"}}, fu:"{pembeli} vouchernya udah masuk ya di chat, moga berkenan nerimanya 😊", wrong:"Makasih ulasannya kak.", psych:"Sogok mereka pakai voucher via chat agar mereka mau mengubah ke bintang 5.", warning: null},
+  {id:119, cat:"Chat Harian", title:"Nanya Kapan Restock Padahal Pabrik Tutup", aliases:["restock kapan","ada lagi kapan"], buyerChat:"Kak {barang} ini kira-kira minggu depan bakal restock lagi gak?", tones:{aman:"Belum bisa mastiin {pembeli} 🙏 Dari pabriknya belum ada jadwal.", pro:"Aduh {pembeli} mending jangan diharapin kak 😭 Pabriknya lagi tutup bahan jadi estimasi restocknya bisa 1-2 bulan lagi. Mending sikat warna yang ready sekarang aja kak.", vn: {tempo:"Serius.", nada:"Memberi info valid.", tekanan:"bisa 2 bulan lagi", teks:"Halo {pembeli}, aduh kak mending jangan ditungguin. Info valid dari bos pabriknya, bahan bakunya lagi susah banget. Jadi kemungkinan restocknya itu masih sangat lama, bisa 1 sampai 2 bulan lagi. Saran aku mending {pembeli} bungkus aja warna yang masih ready sekarang sebelum kehabisan total kak."}}, fu:"{pembeli} mau aku bungkusin warna {warna} aja biar dapet barangnya?", wrong:"Ditunggu aja kak nanti juga restock.", psych:"Jangan suruh pembeli nunggu. Semakin lama menunggu, semakin besar peluang uangnya dipakai beli di toko lain.", warning: null},
+  {id:120, cat:"Retensi", title:"Minta Nomor Pribadi Admin", aliases:["minta wa","nomor admin","chat di wa aja"], buyerChat:"Kak minta nomor WA pribadinya dong biar kalau mau order gampang.", tones:{aman:"Maaf {pembeli} 🙏 Segala transaksi kita via aplikasi ini aja ya kak biar aman.", pro:"Halo {pembeli} 😊 Wah maaf banget kak, dari aturan aplikasi kita dilarang ngasih kontak pribadi. Kita ngobrol dan transaksi via chat ini aja ya kak, tetep *fast respon* kok 🚀", vn: {tempo:"Sopan, tegas.", nada:"Profesional.", tekanan:"dilarang sama aplikasi", teks:"Halo {pembeli}, aduh pengen banget sebenernya ngasih. Cuma mohon maaf banget ya kak, dari sistem aplikasinya itu melarang keras tukeran nomor kontak pribadi, nanti toko aku bisa kena penalti atau diblokir. Kita ngobrol di chat aplikasi ini aja ya kak, tenang aja aku online terus kok. Aman kak."}}, fu:"{pembeli} ada yang mau ditanyain lagi soal {barang}-nya?", wrong:"Gak boleh kak.", psych:"Memberikan nomor WA/transaksi di luar aplikasi akan menghilangkan perlindungan garansi pihak ketiga dan rawan penipuan.", warning: "Kalau lu murni jualan di IG/Tiktok (bukan marketplace), ngasih WA justru WAJIB. Template ini khusus untuk Seller Marketplace."}
+);
+const FOLLOW_UPS = [
+  { timing: "H+1", title: "Keranjang Belum Dibayar", body: "Malam {pembeli} 😊 Tadi ada kendala kah pas mau checkout {barang}? Kalau butuh bantuan, admin {toko} siap bantu pandu ya 🙌" },
+  { timing: "H+2", title: "Pancingan (Natural Urgency)", body: "Sore {pembeli}! Maaf ganggu ya 😊 Info aja nih, {barang} warna {warna} lagi lumayan cepet muternya di gudang. Kalau kakak udah sreg, kabarin ya biar aku bantu amankan stoknya." },
+  { timing: "H+3", title: "Voucher Terakhir", body: "Halo {pembeli}! Khusus buat {pembeli} yang udah nanya kemarin, aku ada potongan subsidi ongkir nih buat pesen {barang}. Sayang banget kalau dilewatin 😊" }
+];
+
+const SOPS = [
+  {title:"SOP Bikin Buyer Cepat Transfer", steps:["Jangan nanya 'Jadi beli gak?'. Kasih alasan logis: 'Biar keburu ikut pengiriman truk sore ini, transaksinya diselesaikan ya kak 🚀'"]},
+  {title:"SOP Menghadapi Komplain (Buyer Ngamuk)", steps:["JANGAN PERNAH balas pakai HURUF KAPITAL.","Validasi perasaannya dulu: 'Maaf banget ya kak bikin kakak kaget/kecewa 🙏' baru kasih solusi."]}
+];
+
+// ==========================================
+// ENGINE APLIKASI (VERSI DIET & LEVEL PANIK)
+// ==========================================
+let currentTab = 'ringan'; 
+let activeTone = {};
+
+window.onload = () => {
+  if(!localStorage.getItem('k_store')) {
+    document.getElementById('setup-screen').classList.remove('hidden');
+  } else {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    STORE_NAME = localStorage.getItem('k_store');
+    document.getElementById('display-toko').innerText = STORE_NAME;
+    init();
+  }
+};
+
+function saveSetup() {
+  const inputName = document.getElementById('setup-toko').value.trim();
+  if(inputName) { STORE_NAME = inputName; localStorage.setItem('k_store', STORE_NAME); location.reload(); }
+}
+
+function gantiNamaToko() {
+  const modal = document.getElementById('modal-ganti-toko');
+  const input = document.getElementById('input-nama-toko-baru');
+  input.value = STORE_NAME;
+  modal.classList.remove('hidden');
+  // Fokus otomatis setelah animasi modal muncul
+  setTimeout(() => { input.focus(); input.select(); }, 150);
+}
+function tutupModalToko() {
+  document.getElementById('modal-ganti-toko').classList.add('hidden');
+}
+function simpanNamaToko() {
+  const namaBaru = document.getElementById('input-nama-toko-baru').value.trim();
+  if (!namaBaru) return;
+  STORE_NAME = namaBaru;
+  localStorage.setItem('k_store', STORE_NAME);
+  document.getElementById('display-toko').innerText = STORE_NAME;
+  tutupModalToko();
+  renderApp();
+  const toast = document.getElementById('toast');
+  toast.innerText = '✅ NAMA TOKO TERSIMPAN';
+  toast.classList.add('show');
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.innerText = '✅ TERSALIN', 500); }, 2500);
+}
+function init() {
+  TEMPLATES.forEach(t => {
+    let title = t.title.toLowerCase();
+    let cat = t.cat.toLowerCase();
+    if (cat.includes('kritis') || title.includes('marah') || title.includes('penipu') || title.includes('refund')) { 
+      t.panicLevel = 'berat'; 
+    } else if (cat.includes('closing') || title.includes('nawar') || title.includes('mahal') || title.includes('gajian')) { 
+      t.panicLevel = 'sedang'; 
+    } else { 
+      t.panicLevel = 'ringan'; 
+    }
+  });
+  switchNav('chat'); 
+}
+
+
+function switchNav(tab) {
+  currentTab = tab;
+  // Mastiin class active nempel di tombol yang bener
+  document.querySelectorAll('.nav-item').forEach((el, i) => { 
+    el.classList.toggle('active', (tab==='chat'&&i===0)||(tab==='auto'&&i===1)||(tab==='closing'&&i===2)||(tab==='bonus'&&i===3)); 
+  });
+  
+  // Sembunyikan bar personalisasi kalau di tab Bonus
+  const isFilterable = (tab !== 'bonus');
+  document.getElementById('dynamic-bar').style.display = isFilterable ? 'block' : 'none'; 
+  document.getElementById('search-bar').style.display = isFilterable ? 'block' : 'none';
+
+  renderApp();
+  window.scrollTo({ top: 0, behavior: 'smooth' }); 
+}
+
+
+
+function formatTeks(text) {
+  if (!text) return "";
+  const v = id => { const el = document.getElementById(id); return el && el.value.trim() ? el.value.trim() : ''; };
+  const pembeli = v('v-pembeli') || 'kak';
+  const barang  = v('v-barang');
+  const warna   = v('v-warna');
+  const ukuran  = v('v-ukuran');
+
+  let r = text
+    .replace(/{toko}/g,    STORE_NAME || 'toko kita')
+    .replace(/{pembeli}/g, pembeli);
+
+  // ── BARANG ──────────────────────────────────────────────────
+  if (barang) {
+    r = r.replace(/{barang}/g, barang);
+  } else {
+    // Urutan penting: yang lebih spesifik dulu
+    r = r
+      .replace(/pesan {barang}/gi,   'pesan')
+      .replace(/pesen {barang}/gi,   'pesan')
+      .replace(/beli {barang}/gi,    'beli')
+      .replace(/order {barang}/gi,   'order')
+      .replace(/{barang}-nya/gi,     'produknya')
+      .replace(/{barang} nya/gi,     'produknya')
+      .replace(/{barang}/g,          'produknya');
+    r = r.replace(/ {2,}/g, ' ');
+  }
+
+  // ── WARNA ───────────────────────────────────────────────────
+  if (warna) {
+    r = r.replace(/{warna}/g, warna);
+    // Fix "warna pink nih?" → "warna pink ya kak?"
+    r = r.replace(/warna (\S+)\s+nih\?/gi, 'warna $1 ya kak?');
+  } else {
+    // Hapus frasa warna dengan fallback yang natural
+    r = r
+      .replace(/yang warna \{warna\}\s*ya kak\?/gi, 'warna apa ya kak?')
+      .replace(/yang warna \{warna\}/gi,             'warna yang kakak mau')
+      .replace(/warna \{warna\}\s*nih\?/gi,          'warna apa kak?')
+      .replace(/warna \{warna\}\s*ya,?/gi,           'warna apa ya,')
+      .replace(/warna \{warna\}/gi,                  'warna yang kakak mau')
+      .replace(/\{warna\}/g,                         '');
+    r = r.replace(/ {2,}/g, ' ').replace(/ ,/g, ',').trim();
+  }
+
+  // ── UKURAN ──────────────────────────────────────────────────
+  if (ukuran) {
+    r = r.replace(/{ukuran}/g, ukuran);
+  } else {
+    r = r
+      .replace(/pake size \{ukuran\}/gi,    'pake ukuran yang pas')
+      .replace(/pake ukuran \{ukuran\}/gi,  'pake ukuran yang pas')
+      .replace(/ambil size \{ukuran\}/gi,   'ambil size yang pas')
+      .replace(/ambil ukuran \{ukuran\}/gi, 'ambil ukuran yang pas')
+      .replace(/size \{ukuran\}/gi,         'ukuran yang pas')
+      .replace(/ukuran \{ukuran\}/gi,       'ukuran yang pas')
+      .replace(/\{ukuran\}/g,               'ukurannya');
+    r = r.replace(/ {2,}/g, ' ').trim();
+  }
+
+  return r;
+}
+
+// ══════════════════════════════════════════
+// COPY SYSTEM — AMAN DARI SEMUA KARAKTER
+// ══════════════════════════════════════════
+window._cm = {};
+function copyFromMap(key) { copyPlain(window._cm[key] || ''); }
+function copyPlain(text) {
+  if (!text) return;
+  const toast = () => {
+    const t = document.getElementById('toast');
+    t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(toast).catch(() => { _fbCopy(text); toast(); });
+  } else { _fbCopy(text); toast(); }
+}
+function _fbCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// ══════════════════════════════════════════
+// DEBOUNCE — render tidak dipanggil tiap
+// huruf, tapi 200ms setelah berhenti ketik
+// ══════════════════════════════════════════
+let _rt;
+function scheduleRender() { clearTimeout(_rt); _rt = setTimeout(renderApp, 200); }
+
+function switchTone(id, tone) { activeTone[id] = tone; renderApp(); }
+
+function triggerRescue(keyword) {
+  document.getElementById('search-bar').value = keyword;
+  if (currentTab === 'bonus') { currentTab = 'chat'; _syncNav(); }
+  renderApp();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function _syncNav() {
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', ['chat','favorit','closing','bonus'][i] === currentTab);
+  });
+}
+
+// ══════════════════════════════════════════
+// SCROLL HANDLER — ANTI KEJANG
+// pakai requestAnimationFrame + direction
+// ══════════════════════════════════════════
+let _lastY = 0, _ticking = false;
+window.addEventListener('scroll', () => {
+  if (_ticking) return;
+  _ticking = true;
+  requestAnimationFrame(() => {
+    const header = document.getElementById('main-header');
+    if (header) {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      if (y > _lastY && y > 80) {
+        header.classList.add('scrolled');      // geser ke atas (konten naik) → compact
+      } else if (y < _lastY - 10) {
+        header.classList.remove('scrolled');   // geser ke bawah (konten turun) → full
+      }
+      _lastY = y <= 0 ? 0 : y;
+    }
+    _ticking = false;
+  });
+}, { passive: true });
+
+// ══════════════════════════════════════════
+// RENDER APP — VERSI PREMIUM
+// ══════════════════════════════════════════
+function renderApp() {
+  const main = document.getElementById('main-area');
+  if (!main) return;
+  const query = document.getElementById('search-bar').value.toLowerCase().trim();
+  window._cm = {};
+
+  // ── TAB BONUS (WOW VERSION) ──────────────────────────────────
+  if (currentTab === 'bonus') {
+    let html = `
+    <!-- HERO BANNER -->
+    <div class="card fade-in" style="background:linear-gradient(135deg,rgba(83,189,235,0.15),rgba(168,85,247,0.15));border-color:rgba(83,189,235,0.3);text-align:center;padding:20px 16px;">
+      <div style="font-size:32px;margin-bottom:8px">🎁</div>
+      <div style="font-size:18px;font-weight:900;margin-bottom:6px">Paket Bonus <span style="color:var(--sky)">Premium</span></div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6">Follow-up otomatis · Psikologi buyer · SOP darurat<br>Formula closing · Kata-kata yang wajib dihindari</div>
+    </div>
+
+    <!-- SECTION: FORMULA JUALAN -->
+    <div class="section-label" style="color:var(--lime);margin-top:4px">⚡ FORMULA CLOSING 3 LANGKAH</div>
+    <div class="card fade-in" style="border-color:rgba(168,255,62,0.3)">
+      <div style="display:flex;align-items:stretch;gap:0;margin-bottom:12px">
+        <div style="flex:1;text-align:center;padding:12px 8px;background:rgba(168,255,62,0.08);border-radius:8px;border:1px solid rgba(168,255,62,0.2)">
+          <div style="font-size:22px;margin-bottom:4px">😌</div>
+          <div style="font-size:11px;font-weight:800;color:var(--lime)">VALIDASI</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Akui perasaan pembeli dulu</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--muted);font-size:16px;font-weight:900">→</div>
+        <div style="flex:1;text-align:center;padding:12px 8px;background:rgba(83,189,235,0.08);border-radius:8px;border:1px solid rgba(83,189,235,0.2)">
+          <div style="font-size:22px;margin-bottom:4px">💡</div>
+          <div style="font-size:11px;font-weight:800;color:var(--sky)">SOLUSI</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Kasih jalan keluar yang jelas</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--muted);font-size:16px;font-weight:900">→</div>
+        <div style="flex:1;text-align:center;padding:12px 8px;background:rgba(168,85,247,0.08);border-radius:8px;border:1px solid rgba(168,85,247,0.2)">
+          <div style="font-size:22px;margin-bottom:4px">🎯</div>
+          <div style="font-size:11px;font-weight:800;color:var(--purple)">ARAHKAN</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Minta satu tindakan konkret</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);background:var(--card);border-radius:8px;padding:10px;line-height:1.6">
+        💡 <b style="color:var(--text)">Contoh:</b> "Iya kak wajar khawatir (VALIDASI) — {toko} garansi tukar baru kok kalau cacat (SOLUSI) — mau aku prosesin sekarang? (ARAHKAN)"
+      </div>
+    </div>
+
+    <!-- SECTION: FOLLOW UP TIMELINE -->
+    <div class="section-label" style="color:var(--sky)">⏳ TIMELINE FOLLOW UP OTOMATIS</div>`;
+
+    FOLLOW_UPS.forEach((f, i) => {
+      const ft = formatTeks(f.body);
+      window._cm['fu_' + i] = ft;
+      const colors = ['var(--lime)','var(--sky)','var(--warn)'];
+      const icons  = ['🌱','🔔','🚨'];
+      html += `
+      <div class="card fade-in" style="border-left:4px solid ${colors[i]};position:relative">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:24px">${icons[i]}</div>
+          <div>
+            <div style="color:${colors[i]};font-weight:900;font-size:13px">${f.timing}</div>
+            <div style="font-weight:800;font-size:13px">${f.title}</div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px;font-size:13px;line-height:1.5;margin-bottom:8px">${ft}</div>
+        <button class="btn-fu" style="border-color:${colors[i]};color:${colors[i]}" onclick="copyFromMap('fu_${i}')">📋 COPY FOLLOW UP ${f.timing}</button>
+      </div>`;
+    });
+
+    // SECTION: KATA SAKTI
+    const kataSakti = [
+      { label:'Bikin Buyer Balas', words:['mau warna yang mana kak?','kakak ada budget berapa?','mau dikirim ke mana nih?','ada yang bisa aku bantu lagi?'] },
+      { label:'Bikin Buyer Transfer', words:['biar kejar pickup sore ini','aku cetak resinya duluan','pesanannya aku prioritasin','stoknya aku hold dulu'] },
+      { label:'Redakan Marah', words:['maaf banget udah bikin kecewa','ini langsung aku tanggung jawab','tenang aja uangnya aman','aku yang urus ke ekspedisi'] },
+    ];
+    html += `<div class="section-label" style="color:var(--warn);margin-top:4px">✨ KATA SAKTI SELLER</div>`;
+    kataSakti.forEach((ks, ki) => {
+      const kc = ['var(--lime)','var(--sky)','var(--red)'][ki];
+      html += `<div class="card fade-in" style="border-left:4px solid ${kc}">
+        <div style="font-weight:800;font-size:12px;color:${kc};margin-bottom:10px">${ks.label}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">`;
+      ks.words.forEach((w, wi) => {
+        const k = `ks_${ki}_${wi}`;
+        window._cm[k] = w;
+        html += `<button onclick="copyFromMap('${k}')" style="background:${kc}1A;border:1px solid ${kc}44;color:var(--text);font-size:12px;padding:7px 11px;border-radius:8px;cursor:pointer;text-align:left">📋 "${w}"</button>`;
+      });
+      html += `</div></div>`;
+    });
+
+    // SECTION: JANGAN BILANG INI
+    const jangan = [
+      { salah:'Masih kak silakan order.', kenapa:'Percakapan mati. Tidak ada alasan pembeli untuk balas.' },
+      { salah:'Sabar kak chat dibalas dari bawah.', kenapa:'Buyer makin kesal. Validasi dulu, baru minta maaf.' },
+      { salah:'Cek resi sendiri kak.', kenapa:'Seller terkesan cuek. Tawarkan diri bantu dulu.' },
+      { salah:'Sesuai invoice kak.', kenapa:'Tidak membantu. Buyer butuh solusi, bukan pengingat aturan.' },
+      { salah:'Oke ditunggu belinya.', kenapa:'Terlalu pasif. Seller yang baik selalu closing dengan pertanyaan.' },
+    ];
+    html += `<div class="section-label" style="color:var(--red);margin-top:4px">❌ KALIMAT YANG HARUS DIHAPUS DARI KAMUS</div>`;
+    jangan.forEach(j => {
+      html += `<div class="card fade-in" style="border-left:4px solid var(--red)">
+        <div style="background:rgba(241,92,109,0.1);border:1px solid rgba(241,92,109,0.2);border-radius:8px;padding:10px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--red);font-weight:800;margin-bottom:4px">❌ JANGAN BILANG:</div>
+          <div style="font-size:13px;color:var(--text);font-style:italic">"${j.salah}"</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">⚠️ ${j.kenapa}</div>
+      </div>`;
+    });
+
+    // SECTION: SOP
+    html += `<div class="section-label" style="color:var(--muted);margin-top:4px">📋 SOP ANTI BLUNDER</div>`;
+    SOPS.forEach(s => {
+      html += `<div class="card fade-in" style="border-left:4px solid var(--red);background:rgba(58,28,32,0.6)">
+        <div style="color:var(--red);font-weight:800;margin-bottom:10px">${s.title}</div>
+        <ul style="padding-left:16px;color:var(--text);font-size:13px;line-height:1.9">${s.steps.map(st => `<li>${st}</li>`).join('')}</ul>
+      </div>`;
+    });
+
+    main.innerHTML = html;
+    return;
+  }
+
+  // ── FILTER LIST ────────────────────────────────────────────────
+  let list;
+  if (query) {
+    list = TEMPLATES.filter(t =>
+      t.title.toLowerCase().includes(query) ||
+      (t.aliases && t.aliases.some(a => a.toLowerCase().includes(query))) ||
+      (t.buyerChat && t.buyerChat.toLowerCase().includes(query))
+    );
+  } else {
+    list = TEMPLATES.filter(t => {
+      if (currentTab === 'chat')    return t.id <= 40;
+      if (currentTab === 'favorit') return favs.has(t.id);
+      if (currentTab === 'closing') return t.id > 80;
+      return true;
+    });
+  }
+
+  // ── EMPTY STATE ────────────────────────────────────────────────
+  if (list.length === 0) {
+    if (currentTab === 'favorit') {
+      main.innerHTML = `<div style="text-align:center;padding:52px 20px">
+        <div style="font-size:48px;margin-bottom:16px">☆</div>
+        <div style="font-weight:900;font-size:16px;margin-bottom:8px;color:var(--text)">Belum ada template favorit</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Tap tombol <b style="color:var(--warn)">☆ Simpan</b> di bawah template manapun<br>untuk disimpan di sini</div>
+        <button onclick="switchNav('chat')" style="background:var(--sky);color:#000;font-weight:800;border:none;padding:12px 24px;border-radius:10px;font-size:14px;cursor:pointer">💬 Lihat Template</button>
+      </div>`;
+    } else {
+      main.innerHTML = `<div style="text-align:center;padding:52px 20px;color:var(--muted)">
+        <div style="font-size:44px;margin-bottom:14px">🔍</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:8px;color:var(--text)">Tidak ditemukan</div>
+        <div style="font-size:13px">Coba kata kunci lain atau pilih tab yang berbeda</div>
+      </div>`;
+    }
+    return;
+  }
+
+  const countLabel = query
+    ? `<div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:14px">🔎 <b style="color:var(--text)">${list.length}</b> template — "<b style="color:var(--sky)">${query}</b>"</div>`
+    : '';
+
+  // ── RENDER CARDS ───────────────────────────────────────────────
+  main.innerHTML = countLabel + list.map(t => {
+    const tone   = activeTone[t.id] || 'aman';
+    const mColor = tone === 'aman' ? 'var(--lime)' : tone === 'pro' ? 'var(--sky)' : 'var(--purple)';
+    const mLabel = tone === 'aman' ? '🛡️ AMAN' : tone === 'pro' ? '🔥 PRO' : '🎙️ VOICE NOTE';
+    const catColor = t.cat === 'Situasi Kritis' ? 'var(--red)'
+                   : t.cat === 'Closing'         ? 'var(--sky)'
+                   : t.cat === 'Retensi'          ? 'var(--purple)'
+                   : 'var(--lime)';
+
+    // FIX: buyerChat juga diformat biar {barang} ikut berubah
+    const plainBuyer  = formatTeks(t.buyerChat || '');
+    const plainAnswer = tone === 'vn' ? formatTeks(t.tones.vn.teks) : formatTeks(t.tones[tone]);
+    const plainFu     = formatTeks(t.fu);
+    window._cm[t.id + 'a'] = plainAnswer;
+    window._cm[t.id + 'f'] = plainFu;
+
+    const buyerBubble = plainBuyer ? `
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:5px">💬 KATA PEMBELI:</div>
+        <div class="bubble-in">${plainBuyer}</div>
+      </div>` : '';
+
+    const answerBubble = tone === 'vn'
+      ? `<div class="vn-box" style="margin-bottom:10px">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px">
+            <span style="font-size:11px;color:var(--muted)">🎵 <b>Tempo:</b> ${t.tones.vn.tempo}</span>
+            <span style="font-size:11px;color:var(--muted)">🎤 <b>Nada:</b> ${t.tones.vn.nada}</span>
+          </div>
+          <div style="font-size:11px;font-weight:800;color:var(--purple);background:rgba(168,85,247,0.12);border-radius:6px;padding:6px 10px;margin-bottom:10px">Tekanan: "${t.tones.vn.tekanan}"</div>
+          <div class="vn-teks">"${plainAnswer}"</div>
+         </div>`
+      : `<div class="bubble-out">${plainAnswer}</div>`;
+
+    const warnBox = t.warning
+      ? `<div style="background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;color:var(--warn);line-height:1.5">⚠️ <b>Catatan:</b> ${t.warning}</div>`
+      : '';
+
+    return `
+    <div class="card fade-in" id="card-${t.id}">
+
+      <!-- ① HEADER: judul + badge + bintang -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="font-weight:800;font-size:14px;line-height:1.3;flex:1;padding-right:10px">${t.title}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div style="font-size:10px;font-weight:800;color:${catColor};background:${catColor}1A;padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid ${catColor}33">${t.cat}</div>
+          <button id="fav-btn-${t.id}" onclick="toggleFavorit(${t.id})" style="background:transparent;border:1px solid ${favs.has(t.id)?'var(--warn)':'var(--border)'};color:${favs.has(t.id)?'var(--warn)':'var(--muted)'};font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;cursor:pointer;white-space:nowrap">${favs.has(t.id)?'⭐ Tersimpan':'☆ Simpan'}</button>
+        </div>
+      </div>
+
+      <!-- ② TONE TOGGLE — di atas, sebelum konten -->
+      <div class="tone-toggle">
+        <div class="tone-btn ${tone==='aman'?'active aman':''}" onclick="switchTone(${t.id},'aman')">🛡️ Aman</div>
+        <div class="tone-btn ${tone==='pro' ?'active pro' :''}" onclick="switchTone(${t.id},'pro')">🔥 Pro</div>
+        <div class="tone-btn ${tone==='vn'  ?'active vn'  :''}" onclick="switchTone(${t.id},'vn')">🎙️ VN</div>
+      </div>
+
+      <!-- ③ BUBBLE PEMBELI -->
+      ${buyerBubble}
+
+      <!-- ④ JAWABAN SELLER -->
+      <div style="font-size:10px;color:${mColor};font-weight:800;margin-bottom:6px">JAWABAN ${mLabel}:</div>
+      ${answerBubble}
+      <button class="btn-copy" onclick="copyFromMap('${t.id}a')">📋 COPY JAWABAN</button>
+
+      <!-- ⑤ FOLLOW UP -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:6px">⏳ FOLLOW UP (kalau tidak dibalas):</div>
+        <div style="background:rgba(83,189,235,0.06);border:1px solid rgba(83,189,235,0.15);border-radius:8px;padding:10px;font-size:13px;line-height:1.5">${plainFu}</div>
+        <button class="btn-fu" onclick="copyFromMap('${t.id}f')">⏳ COPY FOLLOW UP</button>
+      </div>
+
+      <!-- ⑥ PSYCH — COLLAPSE, tidak tampil by default -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button id="psych-btn-${t.id}" onclick="togglePsych(${t.id})" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:800;padding:8px 14px;border-radius:8px;width:100%;cursor:pointer;text-align:left">
+          💡 Tampilkan Alasan
+        </button>
+        <div id="psych-body-${t.id}" class="hidden" style="margin-top:10px">
+          <div style="font-size:10px;color:var(--muted);font-weight:800;margin-bottom:6px">🧠 KENAPA INI WORK:</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:12px">${t.psych}</div>
+          <div style="font-size:10px;color:var(--red);font-weight:800;margin-bottom:5px">❌ JANGAN PERNAH BILANG:</div>
+          <div style="font-size:12px;color:var(--muted);font-style:italic;background:rgba(241,92,109,0.06);border:1px solid rgba(241,92,109,0.15);border-radius:6px;padding:8px">"${t.wrong||'-'}"</div>
+          ${warnBox}
+        </div>
+      </div>
+
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
+
+
+
